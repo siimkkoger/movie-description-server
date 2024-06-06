@@ -185,6 +185,7 @@ public class MovieE2eTest {
                 .andExpect(status().isOk())
                 .andReturn();
         var response = objectMapper.readValue(getResultByEidr.getResponse().getContentAsString(), GetMovieTableResult.class);
+
         assertThat(response).isNotNull();
         var movie = response.movies().get(0);
         assertThat(movie.eidrCode()).isEqualTo(updateMovieRequest.eidrCode());
@@ -201,6 +202,7 @@ public class MovieE2eTest {
                 .andExpect(status().isOk())
                 .andReturn();
         response = objectMapper.readValue(getResultByCategory.getResponse().getContentAsString(), GetMovieTableResult.class);
+
         assertThat(response).isNotNull();
         assertThat(response.movies().stream().anyMatch(m -> m.eidrCode().equals(updateMovieRequest.eidrCode()))).isTrue();
 
@@ -271,4 +273,77 @@ public class MovieE2eTest {
             });
     }
 
+    @Test
+    void testDeleteMovie() throws Exception {
+        // Given
+        var createMovieRequest = new CreateMovieRequest(
+                "eidrCode_test",
+                "name",
+                5.0,
+                2021,
+                MovieStatus.ACTIVE,
+                List.of(2L, 4L)
+        );
+
+        MvcResult createdResult = mockMvc.perform(MockMvcRequestBuilders
+                        .post(controllerPath + "/create-movie")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createMovieRequest))
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andReturn();
+        var createdMovieResponse = objectMapper.readValue(createdResult.getResponse().getContentAsString(), GetMovieResponse.class);
+        var createdMovieEidrCode = createdMovieResponse.movie().eidrCode();
+
+        // When
+        mockMvc.perform(MockMvcRequestBuilders
+                        .delete(controllerPath + "/delete-movies")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new DeleteMoviesRequest(List.of(createdMovieEidrCode))))
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Then
+        MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
+                        .post(controllerPath + "/get-movies-table")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new GetMoviesFilter(null, createdMovieEidrCode, null, null, null, null, null)))
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andReturn();
+        var response = objectMapper.readValue(getResult.getResponse().getContentAsString(), GetMovieTableResult.class);
+
+        assertThat(response).isNotNull();
+        assertThat(response.movies()).isEmpty();
+
+        MvcResult getResultByCategory = mockMvc.perform(MockMvcRequestBuilders
+                        .post(controllerPath + "/get-movies-table")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new GetMoviesFilter(List.of(2L, 4L), null, null, null, null, null, null)))
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andReturn();
+        response = objectMapper.readValue(getResultByCategory.getResponse().getContentAsString(), GetMovieTableResult.class);
+        assertThat(response).isNotNull();
+        assertThat(response.movies().stream().anyMatch(m -> m.eidrCode().equals(createdMovieEidrCode))).isFalse();
+    }
+
+    @Test
+    void testDeleteMovie_invalidInput() throws Exception {
+        // Given
+        var deleteMoviesRequest = new DeleteMoviesRequest(List.of("999999999999"));
+
+        // When
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                        .delete(controllerPath + "/delete-movies")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(deleteMoviesRequest))
+                        .contentType("application/json"))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        // Then
+        assertThat(result.getResolvedException()).isNotNull();
+    }
 }

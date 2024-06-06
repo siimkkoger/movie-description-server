@@ -200,24 +200,20 @@ public class MovieService {
 
     @Transactional(rollbackFor = Exception.class, isolation = Isolation.SERIALIZABLE)
     public boolean deleteMovies(List<String> eidrCodes) {
-        try {
-            // Check if all movies exist
-            List<MovieEntity> movieEntities = movieRepository.findAllById(eidrCodes);
-            if (movieEntities.size() != eidrCodes.size()) {
-                throw new IllegalArgumentException("Some movies do not exist.");
-            }
-
-            // Delete from the bridge table
-            movieCategoryBridgeRepository.deleteAll(movieCategoryBridgeRepository.findAllByMovieEidrCodes(eidrCodes));
-
-            // Delete from the movie table
-            movieRepository.deleteAllById(eidrCodes);
-
-            // Return true if everything went well
-            return true;
-        } catch (Exception e) {
-            return false;
+        // Check if all movies exist
+        List<MovieEntity> movieEntities = movieRepository.findAllById(eidrCodes);
+        if (movieEntities.size() != eidrCodes.size()) {
+            throw new IllegalArgumentException("Some movies do not exist.");
         }
+
+        // Delete from the bridge table
+        movieCategoryBridgeRepository.deleteAll(movieCategoryBridgeRepository.findAllByMovieEidrCodes(eidrCodes));
+
+        // Delete from the movie table
+        movieRepository.deleteAllById(eidrCodes);
+
+        // Return true if everything went well
+        return true;
     }
 
     // So that there wouldn't be unnecessary updates
