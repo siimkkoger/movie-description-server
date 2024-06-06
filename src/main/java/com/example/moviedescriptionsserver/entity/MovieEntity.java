@@ -18,7 +18,7 @@ public class MovieEntity {
     private String name;
 
     @Column(name = "rating", nullable = false)
-    private Integer rating;
+    private Double rating;
 
     @Column(name = "year", nullable = false)
     private Integer year;

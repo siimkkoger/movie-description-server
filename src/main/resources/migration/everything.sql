@@ -11,22 +11,19 @@ GRANT ALL ON SCHEMA public TO devuser;
 CREATE TABLE public.movies
 (
     eidrCode   VARCHAR(255) PRIMARY KEY,
-    name       VARCHAR(255) NOT NULL,
-    rating     INTEGER      NOT NULL,
-    year       DATE         NOT NULL,
-    created_at timestamp    NOT NULL DEFAULT current_timestamp,
-    updated_at timestamp    NOT NULL DEFAULT current_timestamp,
-    deleted_at timestamp    NULL
+    name       VARCHAR(255)     NOT NULL,
+    rating     DOUBLE PRECISION NOT NULL,
+    year       DATE             NOT NULL,
+    created_at timestamp        NOT NULL DEFAULT current_timestamp,
+    updated_at timestamp        NOT NULL DEFAULT current_timestamp,
+    deleted_at timestamp        NULL
 );
 
 -- create categories table
 CREATE TABLE public.categories
 (
     id         SERIAL PRIMARY KEY,
-    name       VARCHAR(255) NOT NULL,
-    created_at timestamp    NOT NULL DEFAULT current_timestamp,
-    updated_at timestamp    NOT NULL DEFAULT current_timestamp,
-    deleted_at timestamp    NULL
+    name       VARCHAR(255) NOT NULL
 );
 
 -- create movies_categories table

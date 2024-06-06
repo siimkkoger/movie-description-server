@@ -1,32 +1,42 @@
 package com.example.moviedescriptionsserver.service;
 
-import com.example.moviedescriptionsserver.dto.CategoryResponse;
-import com.example.moviedescriptionsserver.dto.CreateMovieRequest;
-import com.example.moviedescriptionsserver.dto.GetMovieResponse;
-import com.example.moviedescriptionsserver.dto.UpdateMovieRequest;
-import com.example.moviedescriptionsserver.entity.CategoryEntity;
-import com.example.moviedescriptionsserver.entity.MovieCategoryEntity;
-import com.example.moviedescriptionsserver.entity.MovieEntity;
+import com.example.moviedescriptionsserver.MoviesOrderBy;
+import com.example.moviedescriptionsserver.dto.*;
+import com.example.moviedescriptionsserver.entity.*;
 import com.example.moviedescriptionsserver.repository.CategoryRepository;
 import com.example.moviedescriptionsserver.repository.MovieCategoryBridgeRepository;
 import com.example.moviedescriptionsserver.repository.MovieRepository;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class MovieService {
 
+    private final JPAQueryFactory queryFactory;
+
     private MovieRepository movieRepository;
     private CategoryRepository categoryRepository;
     private MovieCategoryBridgeRepository movieCategoryBridgeRepository;
 
-    public MovieService(MovieRepository movieRepository, CategoryRepository categoryRepository, MovieCategoryBridgeRepository movieCategoryBridgeRepository) {
+    public MovieService(
+            MovieRepository movieRepository,
+            CategoryRepository categoryRepository,
+            MovieCategoryBridgeRepository movieCategoryBridgeRepository,
+            JPAQueryFactory queryFactory) {
         this.movieRepository = movieRepository;
         this.categoryRepository = categoryRepository;
         this.movieCategoryBridgeRepository = movieCategoryBridgeRepository;
+        this.queryFactory = queryFactory;
     }
 
     public GetMovieResponse getMovieByEidrCode(String eidrCode) {
@@ -44,6 +54,70 @@ public class MovieService {
                     return convertToMovieResponse(movieEntity, categoryEntities);
                 })
                 .toList();
+    }
+
+    public GetMovieTableResult getAllMovies(GetMoviesFilter filter) {
+        var m = QMovieEntity.movieEntity;
+        var c = QCategoryEntity.categoryEntity;
+        var mc = QMovieCategoryEntity.movieCategoryEntity;
+
+        BooleanExpression condition = Expressions.asBoolean(true).isTrue();
+
+        // Filter by categories
+        if (filter.categoryIds() != null && !filter.categoryIds().isEmpty()) {
+            condition = condition.and(mc.id.categoryId.in(filter.categoryIds()));
+        }
+        // Filter by name
+        if (filter.name() != null) {
+            condition = condition.and(m.name.containsIgnoreCase(filter.name()));
+        }
+        // Filter by eidrCode
+        if (filter.eidrCode() != null) {
+            condition = condition.and(m.eidrCode.containsIgnoreCase(filter.eidrCode()));
+        }
+
+        // Pagination info
+        long totalItems = queryFactory
+                .selectFrom(m)
+                .where(condition)
+                .fetchCount();
+        int totalPages = (int) Math.ceil((double) totalItems / filter.pageSize());
+        if (totalItems == 0) {
+            return new GetMovieTableResult(new ArrayList<>(), filter.page(), filter.pageSize(), totalItems, totalPages);
+        }
+        var offset = (filter.page() - 1) * filter.pageSize();
+        var orderSpecifier = orderSpecifier(filter.orderBy(), filter.direction());
+
+        // Fetch the movies
+        var movieList = queryFactory
+                .select(Projections.constructor(MovieDto.class,
+                        m.eidrCode,
+                        m.name,
+                        m.rating,
+                        m.year,
+                        m.status,
+                        c.name
+                ))
+                .from(m)
+                .join(mc).on(m.eidrCode.eq(mc.id.movieEidr))
+                .join(c).on(mc.id.categoryId.eq(c.id))
+                .where(condition)
+                .offset(offset)
+                .orderBy(orderSpecifier)
+                .limit(filter.pageSize())
+                .fetch();
+
+        return new GetMovieTableResult(movieList, filter.page(), filter.pageSize(), totalItems, totalPages);
+    }
+
+    private OrderSpecifier<?> orderSpecifier(MoviesOrderBy orderBy, Order direction) {
+        var m = QMovieEntity.movieEntity;
+        return switch (orderBy) {
+            case NAME ->
+                    direction.equals(Order.ASC) ? new OrderSpecifier<>(Order.ASC, m.name) : new OrderSpecifier<>(Order.DESC, m.name);
+            case RATING ->
+                    direction.equals(Order.ASC) ? new OrderSpecifier<>(Order.ASC, m.rating) : new OrderSpecifier<>(Order.DESC, m.rating);
+        };
     }
 
     @Transactional(rollbackFor = Exception.class, isolation = Isolation.SERIALIZABLE)
@@ -135,11 +209,13 @@ public class MovieService {
 
     private GetMovieResponse convertToMovieResponse(MovieEntity movieEntity, List<CategoryEntity> categoryEntities) {
         return new GetMovieResponse(
-                movieEntity.getEidrCode(),
-                movieEntity.getName(),
-                movieEntity.getRating(),
-                movieEntity.getYear(),
-                movieEntity.getStatus(),
+                new MovieDto(
+                        movieEntity.getEidrCode(),
+                        movieEntity.getName(),
+                        movieEntity.getRating(),
+                        movieEntity.getYear(),
+                        movieEntity.getStatus()
+                ),
                 categoryEntities.stream().map(this::convertToCategoryResponse).toList()
         );
     }

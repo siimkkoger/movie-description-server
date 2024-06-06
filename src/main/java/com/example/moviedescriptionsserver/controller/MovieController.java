@@ -1,8 +1,6 @@
 package com.example.moviedescriptionsserver.controller;
 
-import com.example.moviedescriptionsserver.dto.CreateMovieRequest;
-import com.example.moviedescriptionsserver.dto.GetMovieResponse;
-import com.example.moviedescriptionsserver.dto.UpdateMovieRequest;
+import com.example.moviedescriptionsserver.dto.*;
 import com.example.moviedescriptionsserver.service.MovieService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,19 +27,23 @@ public class MovieController {
     }
 
     @GetMapping(value = "/get-by-name/{name}")
-    public List<GetMovieResponse> getMovieByName(@PathVariable String name) {
+    public List<GetMovieResponse> getMoviesByName(@PathVariable String name) {
         logger.info("Getting movie with name: {}", name);
         return movieService.getMovieByName(name);
     }
 
-    // TODO: Implement the createMovie methods
+    @GetMapping(value = "/get-movies-table")
+    public GetMovieTableResult getMoviesTable(@RequestBody GetMoviesFilter filter) {
+        logger.info("Getting all movies");
+        return movieService.getAllMovies(filter);
+    }
+
     @PostMapping(value = "/create-movie")
     public GetMovieResponse createMovie(@RequestBody CreateMovieRequest createMovieRequest) {
         logger.info("Creating movie with name: {}", createMovieRequest.name());
         return movieService.createMovie(createMovieRequest);
     }
 
-    // TODO: Implement updateMovie methods
     @PutMapping(value = "/update-movie")
     public GetMovieResponse updateMovie(@RequestBody UpdateMovieRequest updateMovieRequest) {
         logger.info("Updating movie with eidrCode: {}", updateMovieRequest.eidrCode());

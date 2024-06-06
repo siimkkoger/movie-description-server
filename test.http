@@ -1,0 +1,2 @@
+### test get movie by eidr
+GET /api/v1/movies/eidr/"10.5240/1A1A-4B2C-3D4E-5F6G-H"
