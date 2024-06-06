@@ -34,13 +34,15 @@ public class MovieController {
         return movieService.getMovieByName(name);
     }
 
-    @PostMapping
+    // TODO: Implement the createMovie methods
+    @PostMapping(value = "/create-movie")
     public GetMovieResponse createMovie(@RequestBody CreateMovieRequest createMovieRequest) {
         logger.info("Creating movie with name: {}", createMovieRequest.name());
         return movieService.createMovie(createMovieRequest);
     }
 
-    @PutMapping
+    // TODO: Implement updateMovie methods
+    @PutMapping(value = "/update-movie")
     public GetMovieResponse updateMovie(@RequestBody UpdateMovieRequest updateMovieRequest) {
         logger.info("Updating movie with eidrCode: {}", updateMovieRequest.eidrCode());
         return movieService.updateMovie(updateMovieRequest);
