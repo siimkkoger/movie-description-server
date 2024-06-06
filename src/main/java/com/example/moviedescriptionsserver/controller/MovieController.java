@@ -38,4 +38,10 @@ public class MovieController {
         return movieService.updateMovie(updateMovieRequest);
     }
 
+    @DeleteMapping(value = "/delete-movie")
+    public boolean deleteMovies(@RequestParam List<String> eidrCodes) {
+        logger.info("Deleting movies with eidrCode: {}", eidrCodes);
+        return movieService.deleteMovies(eidrCodes);
+    }
+
 }

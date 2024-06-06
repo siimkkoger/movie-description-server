@@ -160,7 +160,8 @@ public class MovieService {
         List<CategoryEntity> currentCategories = categoryRepository.findCategoriesByMovieEidrCode(updateMovieRequest.eidrCode());
         if (!currentMovieCategoriesEqualRequestedCategories(currentCategories, updateMovieRequest.categories())) {
             // Remove everything from the bridge table and add the new ones
-            movieCategoryBridgeRepository.deleteAll(movieCategoryBridgeRepository.findAllByMovieEidrCode(updateMovieRequest.eidrCode()));
+            List<MovieCategoryEntity> movieCategoryEntities = movieCategoryBridgeRepository.findAllByMovieEidrCodes(List.of(updateMovieRequest.eidrCode()));
+            movieCategoryBridgeRepository.deleteAll(movieCategoryEntities);
             movieCategoryBridgeRepository.saveAll(
                     categoryEntities.stream()
                             .map(categoryEntity -> {
@@ -208,5 +209,21 @@ public class MovieService {
                 categoryEntity.getId(),
                 categoryEntity.getName()
         );
+    }
+
+    @Transactional(rollbackFor = Exception.class, isolation = Isolation.SERIALIZABLE)
+    public boolean deleteMovies(List<String> eidrCodes) {
+        try {
+            // Delete from the bridge table
+            movieCategoryBridgeRepository.deleteAll(movieCategoryBridgeRepository.findAllByMovieEidrCodes(eidrCodes));
+
+            // Delete from the movie table
+            movieRepository.deleteAllById(eidrCodes);
+
+            // Return true if everything went well
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

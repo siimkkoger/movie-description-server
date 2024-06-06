@@ -9,7 +9,5 @@ import java.util.List;
 @Repository
 public interface MovieRepository extends JpaRepository<MovieEntity, String> {
 
-    List<MovieEntity> findByName(String name);
-
     MovieEntity findByEidrCode(String eidrCode);
 }

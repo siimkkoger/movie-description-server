@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface MovieCategoryBridgeRepository extends JpaRepository<MovieCategoryEntity, MovieCategoryEntityId> {
 
-    @Query("SELECT mce FROM MovieCategoryEntity mce WHERE mce.id.movieEidr = :eidrCode")
-    List<MovieCategoryEntity> findAllByMovieEidrCode(String eidrCode);
+    @Query("SELECT mce FROM MovieCategoryEntity mce WHERE mce.id.movieEidr in :eidrCodes")
+    List<MovieCategoryEntity> findAllByMovieEidrCodes(List<String> eidrCodes);
 
 }
