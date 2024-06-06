@@ -11,6 +11,6 @@ public record CreateMovieRequest(
         @NotNull Double rating,
         @NotNull Integer year,
         @NotNull Boolean status,
-        @NotNull @NotEmpty List<String> categories
+        @NotNull @NotEmpty List<Long> categories
 ) {
 }
