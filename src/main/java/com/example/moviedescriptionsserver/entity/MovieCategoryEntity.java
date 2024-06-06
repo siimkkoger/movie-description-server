@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "movie_category", schema = "public")
+@Table(name = "movies_categories", schema = "public")
 public class MovieCategoryEntity {
 
     @EmbeddedId

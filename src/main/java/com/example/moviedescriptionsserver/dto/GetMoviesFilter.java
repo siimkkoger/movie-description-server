@@ -12,8 +12,7 @@ public record GetMoviesFilter(
         List<Long> categoryIds,
         String eidrCode,
         String name,
-        Boolean showOnlyActivated,
-        @NotNull @Min(0) Integer page,   // Page number (0-based)
+        @NotNull @Min(1) Integer page,   // Page number (1-based)
         @NotNull @Positive Integer pageSize,   // Number of items per page
         @NotNull MoviesOrderBy orderBy,
         @NotNull Order direction

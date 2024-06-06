@@ -15,7 +15,7 @@ import java.util.Objects;
 @Embeddable
 public class MovieCategoryEntityId implements Serializable {
 
-    @Column(name = "movie_eidr", nullable = false, updatable = false)
+    @Column(name = "movie_id", nullable = false, updatable = false)
     private String movieEidr;
     @Column(name = "category_id", nullable = false, updatable = false)
     private Long categoryId;

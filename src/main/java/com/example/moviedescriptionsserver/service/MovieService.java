@@ -24,9 +24,9 @@ public class MovieService {
 
     private final JPAQueryFactory queryFactory;
 
-    private MovieRepository movieRepository;
-    private CategoryRepository categoryRepository;
-    private MovieCategoryBridgeRepository movieCategoryBridgeRepository;
+    private final MovieRepository movieRepository;
+    private final CategoryRepository categoryRepository;
+    private final MovieCategoryBridgeRepository movieCategoryBridgeRepository;
 
     public MovieService(
             MovieRepository movieRepository,
@@ -78,8 +78,7 @@ public class MovieService {
                         m.name,
                         m.rating,
                         m.year,
-                        m.status,
-                        c.name
+                        m.status
                 ))
                 .from(m)
                 .join(mc).on(m.eidrCode.eq(mc.id.movieEidr))

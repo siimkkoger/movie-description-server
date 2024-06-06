@@ -20,7 +20,7 @@ public class MovieController {
         this.movieService = movieService;
     }
 
-    @GetMapping(value = "/get-movies-table")
+    @PostMapping(value = "/get-movies-table")
     public GetMovieTableResult getMoviesTable(@RequestBody GetMoviesFilter filter) {
         logger.info("Getting all movies");
         return movieService.getAllMovies(filter);

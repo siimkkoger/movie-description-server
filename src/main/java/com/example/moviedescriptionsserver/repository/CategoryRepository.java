@@ -13,7 +13,7 @@ public interface CategoryRepository extends JpaRepository<CategoryEntity, Long> 
     @Query("SELECT c FROM CategoryEntity c " +
             "JOIN MovieCategoryEntity mc ON c.id = mc.id.categoryId " +
             "JOIN MovieEntity m ON mc.id.movieEidr = m.eidrCode WHERE m.eidrCode = :eidrCode")
-    List<CategoryEntity> findCategoriesByMovieEidrCode(String movieEidrCode);
+    List<CategoryEntity> findCategoriesByMovieEidrCode(String eidrCode);
 
     @Query("SELECT c FROM CategoryEntity c " +
             "JOIN MovieCategoryEntity mc ON c.id = mc.id.categoryId " +

@@ -1,2 +1,12 @@
 ### test get movie by eidr
-GET /api/v1/movies/eidr/"10.5240/1A1A-4B2C-3D4E-5F6G-H"
+POST http://localhost:8080/api/movie/get-movies-table
+Content-Type: application/json
+
+{
+    "eidrCode": null,
+    "name": null,
+    "page": 1,
+    "pageSize": 100,
+    "orderBy": "NAME",
+    "direction": "ASC"
+}
