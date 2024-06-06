@@ -1,6 +1,7 @@
 package com.example.moviedescriptionsserver.service;
 
 import com.example.moviedescriptionsserver.MoviesOrderBy;
+import com.example.moviedescriptionsserver.controller.MovieController;
 import com.example.moviedescriptionsserver.dto.*;
 import com.example.moviedescriptionsserver.entity.*;
 import com.example.moviedescriptionsserver.repository.CategoryRepository;
@@ -12,6 +13,8 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +24,8 @@ import java.util.List;
 
 @Service
 public class MovieService {
+
+    static Logger logger = LoggerFactory.getLogger(MovieService.class);
 
     private final JPAQueryFactory queryFactory;
 
@@ -104,6 +109,9 @@ public class MovieService {
 
     @Transactional(rollbackFor = Exception.class, isolation = Isolation.SERIALIZABLE)
     public GetMovieResponse createMovie(CreateMovieRequest createMovieRequest) {
+        if (movieRepository.findByEidrCode(createMovieRequest.eidrCode()) != null) {
+            throw new IllegalArgumentException("Movie with eidrCode " + createMovieRequest.eidrCode() + " already exists.");
+        }
         if (createMovieRequest.categories() == null || createMovieRequest.categories().isEmpty()) {
             throw new IllegalArgumentException("Movie has to have at least one category.");
         }
@@ -111,6 +119,8 @@ public class MovieService {
         if (categoryEntities.size() != createMovieRequest.categories().size()) {
             throw new IllegalArgumentException("Some categories do not exist.");
         }
+
+        logger.info("Creating movie with information: {}", createMovieRequest.toString());
 
         MovieEntity movie = new MovieEntity();
         movie.setEidrCode(createMovieRequest.eidrCode());
@@ -123,9 +133,11 @@ public class MovieService {
         movieCategoryBridgeRepository.saveAll(
                 categoryEntities.stream()
                         .map(categoryEntity -> {
+                            var MovieCategoryEntityId = new MovieCategoryEntityId();
+                            MovieCategoryEntityId.setMovieEidr(savedMovieEntity.getEidrCode());
+                            MovieCategoryEntityId.setCategoryId(categoryEntity.getId());
                             var movieCategoryEntity = new MovieCategoryEntity();
-                            movieCategoryEntity.getId().setMovieEidr(savedMovieEntity.getEidrCode());
-                            movieCategoryEntity.getId().setCategoryId(categoryEntity.getId());
+                            movieCategoryEntity.setId(MovieCategoryEntityId);
                             return movieCategoryEntity;
                         })
                         .toList()
@@ -176,6 +188,28 @@ public class MovieService {
         return convertToMovieResponse(movieEntity, categoryEntities);
     }
 
+    @Transactional(rollbackFor = Exception.class, isolation = Isolation.SERIALIZABLE)
+    public boolean deleteMovies(List<String> eidrCodes) {
+        try {
+            // Check if all movies exist
+            List<MovieEntity> movieEntities = movieRepository.findAllById(eidrCodes);
+            if (movieEntities.size() != eidrCodes.size()) {
+                throw new IllegalArgumentException("Some movies do not exist.");
+            }
+
+            // Delete from the bridge table
+            movieCategoryBridgeRepository.deleteAll(movieCategoryBridgeRepository.findAllByMovieEidrCodes(eidrCodes));
+
+            // Delete from the movie table
+            movieRepository.deleteAllById(eidrCodes);
+
+            // Return true if everything went well
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     // So that there wouldn't be unnecessary updates
     private boolean currentMovieFieldsEqualRequestedFields(MovieEntity movieEntity, UpdateMovieRequest updateMovieRequest) {
         return movieEntity.getEidrCode().equals(updateMovieRequest.eidrCode()) &&
@@ -208,21 +242,5 @@ public class MovieService {
                 categoryEntity.getId(),
                 categoryEntity.getName()
         );
-    }
-
-    @Transactional(rollbackFor = Exception.class, isolation = Isolation.SERIALIZABLE)
-    public boolean deleteMovies(List<String> eidrCodes) {
-        try {
-            // Delete from the bridge table
-            movieCategoryBridgeRepository.deleteAll(movieCategoryBridgeRepository.findAllByMovieEidrCodes(eidrCodes));
-
-            // Delete from the movie table
-            movieRepository.deleteAllById(eidrCodes);
-
-            // Return true if everything went well
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
     }
 }

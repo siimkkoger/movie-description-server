@@ -1,4 +1,4 @@
-### test get movie by eidr
+### test get movie by eidr - 100 NAME ASC
 POST http://localhost:8080/api/movie/get-movies-table
 Content-Type: application/json
 
@@ -9,4 +9,77 @@ Content-Type: application/json
     "pageSize": 100,
     "orderBy": "NAME",
     "direction": "ASC"
+}
+
+### test get movie by eidr - 5 RATING DESC
+POST http://localhost:8080/api/movie/get-movies-table
+Content-Type: application/json
+
+{
+  "eidrCode": null,
+  "name": null,
+  "page": 1,
+  "pageSize": 5,
+  "orderBy": "RATING",
+  "direction": "DESC"
+}
+
+### test create movie
+POST http://localhost:8080/api/movie/create-movie
+Content-Type: application/json
+
+{
+  "eidrCode": "10.5240/1A1A-4D4D-3E3E-2B2B-1A1A-4",
+  "name": "The Matrix",
+  "rating": 69.69,
+  "year": 1999,
+  "status": "ACTIVE",
+  "categories": [1]
+}
+
+### test get movie by eidr newly created
+POST http://localhost:8080/api/movie/get-movies-table
+Content-Type: application/json
+
+{
+  "eidrCode": "10.5240/1A1A-4D4D-3E3E-2B2B-1A1A-4",
+  "name": null,
+  "page": 1,
+  "pageSize": 100,
+  "orderBy": "NAME",
+  "direction": "ASC"
+}
+
+### test update movie - eidr doesn't exist
+PUT http://localhost:8080/api/movie/update-movie
+Content-Type: application/json
+
+{
+  "eidrCode": "10.5240/1A1A-4D4D-3E3E-2B2B-1A1A-44",
+  "name": "The Matrix Reloaded",
+  "rating": 69.69,
+  "year": 1999,
+  "status": "ACTIVE",
+  "categories": [1]
+}
+
+### test update movie - eidr exists
+PUT http://localhost:8080/api/movie/update-movie
+Content-Type: application/json
+
+{
+  "eidrCode": "10.5240/1A1A-4D4D-3E3E-2B2B-1A1A-4",
+  "name": "The Matrix Reloaded",
+  "rating": 69.520,
+  "year": 1999,
+  "status": "ACTIVE",
+  "categories": [1]
+}
+
+### test delete movie
+DELETE http://localhost:8080/api/movie/delete-movies
+Content-Type: application/json
+
+{
+  "eidrCodes": ["10.5240/1A1A-4D4D-3E3E-2B2B-1A1A-4", "xxx"]
 }

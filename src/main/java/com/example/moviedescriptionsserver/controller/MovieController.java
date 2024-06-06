@@ -6,7 +6,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping(value = "api/movie")
@@ -38,10 +37,10 @@ public class MovieController {
         return movieService.updateMovie(updateMovieRequest);
     }
 
-    @DeleteMapping(value = "/delete-movie")
-    public boolean deleteMovies(@RequestParam List<String> eidrCodes) {
-        logger.info("Deleting movies with eidrCode: {}", eidrCodes);
-        return movieService.deleteMovies(eidrCodes);
+    @DeleteMapping(value = "/delete-movies")
+    public boolean deleteMovies(@RequestBody DeleteMoviesRequest deleteMoviesRequest) {
+        logger.info("Deleting movies with eidrCode: {}", deleteMoviesRequest.eidrCodes());
+        return movieService.deleteMovies(deleteMoviesRequest.eidrCodes());
     }
 
 }

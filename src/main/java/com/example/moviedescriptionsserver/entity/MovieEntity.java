@@ -1,8 +1,11 @@
 package com.example.moviedescriptionsserver.entity;
 
+import com.example.moviedescriptionsserver.MovieStatus;
 import lombok.Getter;
 import lombok.Setter;
 import jakarta.persistence.*;
+
+import static jakarta.persistence.EnumType.STRING;
 
 @Entity
 @Table(name = "movies", schema = "public")
@@ -23,7 +26,8 @@ public class MovieEntity {
     @Column(name = "year", nullable = false)
     private Integer year;
 
+    @Enumerated(STRING)
     @Column(name = "status", nullable = false)
-    private Boolean status;
+    private MovieStatus status;
 
 }

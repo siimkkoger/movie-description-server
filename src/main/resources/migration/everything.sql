@@ -14,10 +14,12 @@ CREATE TABLE public.movies
     name       VARCHAR(255)     NOT NULL,
     rating     DOUBLE PRECISION NOT NULL,
     year       INTEGER          NOT NULL,
-    status     BOOLEAN          NOT NULL DEFAULT TRUE,
+    status     VARCHAR(255)     NOT NULL DEFAULT 'ACTIVE',
     created_at timestamp        NOT NULL DEFAULT current_timestamp,
     updated_at timestamp        NOT NULL DEFAULT current_timestamp,
-    deleted_at timestamp        NULL
+    deleted_at timestamp        NULL,
+
+    CONSTRAINT check_movie_status_in_supported_values CHECK (status in ('ACTIVE', 'INACTIVE'))
 );
 
 -- create categories table
