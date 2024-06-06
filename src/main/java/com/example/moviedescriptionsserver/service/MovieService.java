@@ -39,23 +39,6 @@ public class MovieService {
         this.queryFactory = queryFactory;
     }
 
-    public GetMovieResponse getMovieByEidrCode(String eidrCode) {
-        final MovieEntity movieEntity = movieRepository.findByEidrCode(eidrCode);
-        final List<CategoryEntity> categoryEntities = categoryRepository.findCategoriesByMovieEidrCode(eidrCode);
-
-        return convertToMovieResponse(movieEntity, categoryEntities);
-    }
-
-    public List<GetMovieResponse> getMovieByName(String name) {
-        List<MovieEntity> movieEntities = movieRepository.findByName(name);
-        return movieEntities.stream()
-                .map(movieEntity -> {
-                    List<CategoryEntity> categoryEntities = categoryRepository.findCategoriesByMovieEidrCode(movieEntity.getEidrCode());
-                    return convertToMovieResponse(movieEntity, categoryEntities);
-                })
-                .toList();
-    }
-
     public GetMovieTableResult getAllMovies(GetMoviesFilter filter) {
         var m = QMovieEntity.movieEntity;
         var c = QCategoryEntity.categoryEntity;

@@ -4,6 +4,7 @@ import com.example.moviedescriptionsserver.controller.MovieController;
 import com.example.moviedescriptionsserver.dto.CategoryResponse;
 import com.example.moviedescriptionsserver.dto.CreateMovieRequest;
 import com.example.moviedescriptionsserver.dto.GetMovieResponse;
+import com.example.moviedescriptionsserver.dto.MovieDto;
 import com.example.moviedescriptionsserver.service.MovieService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -36,50 +37,11 @@ class MovieControllerTest {
     private MovieService movieService;
 
     @Test
-    public void testGetMovieByEidrCode() throws Exception {
-        // Given
-        final String eidrCode = "1234";
-        final List<CategoryResponse> categories = List.of(new CategoryResponse(1L, "Category 1"));
-        final GetMovieResponse expectedResponse = new GetMovieResponse("1234", "Movie 1", 4.5, 2021, true, categories);
-        given(movieService.getMovieByEidrCode("1234")).willReturn(expectedResponse);
-
-        // When
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                        .get(controllerPath + "/get-by-eidr/%s".formatted(eidrCode))
-                        .contentType("application/json"))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // Then
-        assertThat(result.getResponse().getContentAsString()).isEqualTo(objectMapper.writeValueAsString(expectedResponse));
-    }
-
-    @Test
-    public void testGetMoviesByName() throws Exception {
-        // Given
-        final String name = "Movie 1";
-        final List<CategoryResponse> categories = List.of(new CategoryResponse(1L, "Category 1"));
-        final GetMovieResponse movie1 = new GetMovieResponse("1234", "Movie 1", 4.5, 2021, true, categories);
-        final GetMovieResponse movie2 = new GetMovieResponse("5678", "Movie 1", 4.0, 2020, false, categories);
-
-        given(movieService.getMovieByName("Movie 1")).willReturn(List.of(movie1, movie2));
-
-        // When
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                        .get(controllerPath + "/get-by-name/%s".formatted(name))
-                        .contentType("application/json"))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // Then
-        assertThat(result.getResponse().getContentAsString()).isEqualTo(objectMapper.writeValueAsString(List.of(movie1, movie2)));
-    }
-
-    @Test
     public void testCreateMovie() throws Exception {
         // Given
+        final MovieDto movie = new MovieDto("1234", "Movie 1", 4.5, 2021, true);
         final List<CategoryResponse> categories = List.of(new CategoryResponse(1L, "Category 1"));
-        final GetMovieResponse expectedResponse = new GetMovieResponse("1234", "Movie 1", 4.5, 2021, true, categories);
+        final GetMovieResponse expectedResponse = new GetMovieResponse(movie, categories);
         final CreateMovieRequest createMovieRequest = new CreateMovieRequest("1234", "Movie 1", 4.5, 2021, true, List.of(1L));
         given(movieService.createMovie(createMovieRequest)).willReturn(expectedResponse);
 

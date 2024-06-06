@@ -20,18 +20,6 @@ public class MovieController {
         this.movieService = movieService;
     }
 
-    @GetMapping(value = "/get-by-eidr/{eidrCode}")
-    public GetMovieResponse getMovieByEidrCode(@PathVariable String eidrCode) {
-        logger.info("Getting movie with eidrCode: {}", eidrCode);
-        return movieService.getMovieByEidrCode(eidrCode);
-    }
-
-    @GetMapping(value = "/get-by-name/{name}")
-    public List<GetMovieResponse> getMoviesByName(@PathVariable String name) {
-        logger.info("Getting movie with name: {}", name);
-        return movieService.getMovieByName(name);
-    }
-
     @GetMapping(value = "/get-movies-table")
     public GetMovieTableResult getMoviesTable(@RequestBody GetMoviesFilter filter) {
         logger.info("Getting all movies");
