@@ -19,7 +19,7 @@ public record GetMoviesFilter(
 ) {
     public GetMoviesFilter {
         if (page == null) {
-            page = 0;
+            page = 1;
         }
         if (pageSize == null) {
             pageSize = 5;

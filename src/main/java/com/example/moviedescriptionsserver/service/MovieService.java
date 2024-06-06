@@ -68,6 +68,8 @@ public class MovieService {
         // Pagination info
         long totalItems = queryFactory
                 .selectFrom(m)
+                .join(mc).on(m.eidrCode.eq(mc.id.movieEidr))
+                .join(c).on(mc.id.categoryId.eq(c.id))
                 .where(condition)
                 .fetchCount();
         int totalPages = (int) Math.ceil((double) totalItems / filter.pageSize());
@@ -140,6 +142,7 @@ public class MovieService {
                             var MovieCategoryEntityId = new MovieCategoryEntityId();
                             MovieCategoryEntityId.setMovieEidr(savedMovieEntity.getEidrCode());
                             MovieCategoryEntityId.setCategoryId(categoryEntity.getId());
+
                             var movieCategoryEntity = new MovieCategoryEntity();
                             movieCategoryEntity.setId(MovieCategoryEntityId);
                             return movieCategoryEntity;
@@ -180,9 +183,12 @@ public class MovieService {
             movieCategoryBridgeRepository.saveAll(
                     categoryEntities.stream()
                             .map(categoryEntity -> {
+                                var MovieCategoryEntityId = new MovieCategoryEntityId();
+                                MovieCategoryEntityId.setMovieEidr(updateMovieRequest.eidrCode());
+                                MovieCategoryEntityId.setCategoryId(categoryEntity.getId());
+
                                 var movieCategoryEntity = new MovieCategoryEntity();
-                                movieCategoryEntity.getId().setMovieEidr(updateMovieRequest.eidrCode());
-                                movieCategoryEntity.getId().setCategoryId(categoryEntity.getId());
+                                movieCategoryEntity.setId(MovieCategoryEntityId);
                                 return movieCategoryEntity;
                             })
                             .toList()
