@@ -39,10 +39,10 @@ class MovieControllerTest {
     @Test
     public void testCreateMovie() throws Exception {
         // Given
-        final MovieDto movie = new MovieDto("1234", "Movie 1", 4.5, 2021, true);
+        final MovieDto movie = new MovieDto("1234", "Movie 1", 4.5, 2021, MovieStatus.ACTIVE);
         final List<CategoryResponse> categories = List.of(new CategoryResponse(1L, "Category 1"));
         final GetMovieResponse expectedResponse = new GetMovieResponse(movie, categories);
-        final CreateMovieRequest createMovieRequest = new CreateMovieRequest("1234", "Movie 1", 4.5, 2021, true, List.of(1L));
+        final CreateMovieRequest createMovieRequest = new CreateMovieRequest("1234", "Movie 1", 4.5, 2021, MovieStatus.ACTIVE, List.of(1L));
         given(movieService.createMovie(createMovieRequest)).willReturn(expectedResponse);
 
         // When
@@ -61,13 +61,13 @@ class MovieControllerTest {
     public void testCreateMovie_invalidInput() throws Exception {
         // Given
         final List<CreateMovieRequest> invalidInputs = List.of(
-                new CreateMovieRequest(null, "Movie 1", 4.5, 2021, true, List.of(1L)),
-                new CreateMovieRequest("1234", null, 4.5, 2021, true, List.of(1L)),
-                new CreateMovieRequest("1234", "Movie 1", null, 2021, true, List.of(1L)),
-                new CreateMovieRequest("1234", "Movie 1", 4.5, null, true, List.of(1L)),
+                new CreateMovieRequest(null, "Movie 1", 4.5, 2021, MovieStatus.ACTIVE, List.of(1L)),
+                new CreateMovieRequest("1234", null, 4.5, 2021, MovieStatus.ACTIVE, List.of(1L)),
+                new CreateMovieRequest("1234", "Movie 1", null, 2021, MovieStatus.ACTIVE, List.of(1L)),
+                new CreateMovieRequest("1234", "Movie 1", 4.5, null, MovieStatus.ACTIVE, List.of(1L)),
                 new CreateMovieRequest("1234", "Movie 1", 4.5, 2021, null, List.of(1L)),
-                new CreateMovieRequest("1234", "Movie 1", 4.5, 2021, true, null),
-                new CreateMovieRequest("1234", "Movie 1", 4.5, 2021, true, List.of())
+                new CreateMovieRequest("1234", "Movie 1", 4.5, 2021, MovieStatus.ACTIVE, null),
+                new CreateMovieRequest("1234", "Movie 1", 4.5, 2021, MovieStatus.ACTIVE, List.of())
         );
 
         invalidInputs.forEach(input -> {

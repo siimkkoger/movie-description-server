@@ -2,6 +2,7 @@ package com.example.moviedescriptionsserver.controller;
 
 import com.example.moviedescriptionsserver.dto.*;
 import com.example.moviedescriptionsserver.service.MovieService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
@@ -20,25 +21,25 @@ public class MovieController {
     }
 
     @PostMapping(value = "/get-movies-table")
-    public GetMovieTableResult getMoviesTable(@RequestBody GetMoviesFilter filter) {
+    public GetMovieTableResult getMoviesTable(@Valid @RequestBody GetMoviesFilter filter) {
         logger.info("Getting all movies");
         return movieService.getAllMovies(filter);
     }
 
     @PostMapping(value = "/create-movie")
-    public GetMovieResponse createMovie(@RequestBody CreateMovieRequest createMovieRequest) {
+    public GetMovieResponse createMovie(@Valid @RequestBody CreateMovieRequest createMovieRequest) {
         logger.info("Creating movie with name: {}", createMovieRequest.name());
         return movieService.createMovie(createMovieRequest);
     }
 
     @PutMapping(value = "/update-movie")
-    public GetMovieResponse updateMovie(@RequestBody UpdateMovieRequest updateMovieRequest) {
+    public GetMovieResponse updateMovie(@Valid @RequestBody UpdateMovieRequest updateMovieRequest) {
         logger.info("Updating movie with eidrCode: {}", updateMovieRequest.eidrCode());
         return movieService.updateMovie(updateMovieRequest);
     }
 
     @DeleteMapping(value = "/delete-movies")
-    public boolean deleteMovies(@RequestBody DeleteMoviesRequest deleteMoviesRequest) {
+    public boolean deleteMovies(@Valid @RequestBody DeleteMoviesRequest deleteMoviesRequest) {
         logger.info("Deleting movies with eidrCode: {}", deleteMoviesRequest.eidrCodes());
         return movieService.deleteMovies(deleteMoviesRequest.eidrCodes());
     }

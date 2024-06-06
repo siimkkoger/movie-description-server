@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -111,6 +112,9 @@ public class MovieService {
     public GetMovieResponse createMovie(CreateMovieRequest createMovieRequest) {
         if (movieRepository.findByEidrCode(createMovieRequest.eidrCode()) != null) {
             throw new IllegalArgumentException("Movie with eidrCode " + createMovieRequest.eidrCode() + " already exists.");
+        }
+        if (createMovieRequest.year() > Year.now().getValue()) {
+            throw new IllegalArgumentException("Year cannot be in the future.");
         }
         if (createMovieRequest.categories() == null || createMovieRequest.categories().isEmpty()) {
             throw new IllegalArgumentException("Movie has to have at least one category.");
