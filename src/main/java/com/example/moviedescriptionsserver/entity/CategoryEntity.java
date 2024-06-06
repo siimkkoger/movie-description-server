@@ -8,11 +8,11 @@ import lombok.Setter;
 @Table(name = "category", schema = "public")
 @Getter
 @Setter
-public class Category {
+public class CategoryEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String id;
+    private Long id;
 
     @Column(name = "name", nullable = false, updatable = false)
     private String name;

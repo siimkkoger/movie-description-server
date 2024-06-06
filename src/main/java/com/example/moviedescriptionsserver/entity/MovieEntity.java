@@ -8,7 +8,7 @@ import jakarta.persistence.*;
 @Table(name = "movie", schema = "public")
 @Getter
 @Setter
-public class Movie {
+public class MovieEntity {
 
     @Id
     @Column(name = "eidr_code", nullable = false, updatable = false)
