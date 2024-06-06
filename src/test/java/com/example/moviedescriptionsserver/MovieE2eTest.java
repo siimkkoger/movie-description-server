@@ -6,6 +6,7 @@ import com.example.moviedescriptionsserver.repository.CategoryRepository;
 import com.example.moviedescriptionsserver.repository.MovieCategoryBridgeRepository;
 import com.example.moviedescriptionsserver.repository.MovieRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.querydsl.core.types.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -345,5 +346,118 @@ public class MovieE2eTest {
 
         // Then
         assertThat(result.getResolvedException()).isNotNull();
+    }
+
+    @Test
+    void testGetMovies_noInputs() throws Exception {
+        // Given
+        // When
+        MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
+                        .post(controllerPath + "/get-movies-table")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new GetMoviesFilter(null, null, null, null, null, null, null)))
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Then
+        var response = objectMapper.readValue(getResult.getResponse().getContentAsString(), GetMovieTableResult.class);
+        assertThat(response).isNotNull();
+        assertThat(response.movies()).hasSize(5);
+        assertThat(response.page()).isEqualTo(1);
+        assertThat(response.totalPages()).isEqualTo(5);
+        assertThat(response.totalItems()).isEqualTo(25);
+    }
+
+    @Test
+    void testGetMovies_categoryFilter() throws Exception {
+        // Given
+        // When
+        MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
+                        .post(controllerPath + "/get-movies-table")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new GetMoviesFilter(List.of(1L), null, null, null, null, null, null)))
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Then
+        var response = objectMapper.readValue(getResult.getResponse().getContentAsString(), GetMovieTableResult.class);
+        assertThat(response).isNotNull();
+        assertThat(response.movies()).hasSize(5);
+        assertThat(response.page()).isEqualTo(1);
+        assertThat(response.totalPages()).isEqualTo(2);
+        assertThat(response.totalItems()).isEqualTo(10);
+    }
+
+    @Test
+    void testGetMovies_pagination() throws Exception {
+        // Given
+        // When
+        MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
+                        .post(controllerPath + "/get-movies-table")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new GetMoviesFilter(null, null, null, 2, 10, null, null)))
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Then
+        var response = objectMapper.readValue(getResult.getResponse().getContentAsString(), GetMovieTableResult.class);
+        assertThat(response).isNotNull();
+        assertThat(response.movies()).hasSize(10);
+        assertThat(response.page()).isEqualTo(2);
+        assertThat(response.totalPages()).isEqualTo(3);
+        assertThat(response.totalItems()).isEqualTo(25);
+    }
+
+    @Test
+    void testGetMovies_orderBy_desc() throws Exception {
+        // Given
+        // When
+        MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
+                        .post(controllerPath + "/get-movies-table")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new GetMoviesFilter(null, null, null, 1, 7, MoviesOrderBy.RATING, Order.DESC)))
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Then
+        var response = objectMapper.readValue(getResult.getResponse().getContentAsString(), GetMovieTableResult.class);
+        assertThat(response).isNotNull();
+        assertThat(response.movies()).hasSize(7);
+        assertThat(response.movies().get(0).rating()).isEqualTo(9.0);
+        assertThat(response.movies().get(1).rating()).isEqualTo(9.0);
+        assertThat(response.movies().get(2).rating()).isEqualTo(9.0);
+        assertThat(response.movies().get(3).rating()).isEqualTo(9.0);
+        assertThat(response.movies().get(4).rating()).isEqualTo(9.0);
+        assertThat(response.movies().get(5).rating()).isEqualTo(9.0);
+        assertThat(response.movies().get(6).rating()).isEqualTo(8.0);
+    }
+
+    @Test
+    void testGetMovies_orderBy_asc() throws Exception {
+        // Given
+        // When
+        MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
+                        .post(controllerPath + "/get-movies-table")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new GetMoviesFilter(null, null, null, 1, 7, MoviesOrderBy.RATING, Order.ASC)))
+                        .contentType("application/json"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Then
+        var response = objectMapper.readValue(getResult.getResponse().getContentAsString(), GetMovieTableResult.class);
+        assertThat(response).isNotNull();
+        assertThat(response.movies()).hasSize(7);
+        assertThat(response.movies().get(0).rating()).isEqualTo(6.0);
+        assertThat(response.movies().get(1).rating()).isEqualTo(6.0);
+        assertThat(response.movies().get(2).rating()).isEqualTo(6.0);
+        assertThat(response.movies().get(3).rating()).isEqualTo(6.0);
+        assertThat(response.movies().get(4).rating()).isEqualTo(6.0);
+        assertThat(response.movies().get(5).rating()).isEqualTo(6.0);
+        assertThat(response.movies().get(6).rating()).isEqualTo(7.0);
     }
 }

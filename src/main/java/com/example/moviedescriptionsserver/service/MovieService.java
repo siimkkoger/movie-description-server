@@ -71,8 +71,13 @@ public class MovieService {
                 .join(mc).on(m.eidrCode.eq(mc.id.movieEidr))
                 .join(c).on(mc.id.categoryId.eq(c.id))
                 .where(condition)
+                .groupBy(m.eidrCode, m.name, m.rating, m.year, m.status)
                 .fetchCount();
         int totalPages = (int) Math.ceil((double) totalItems / filter.pageSize());
+        System.out.println("totalItems: " + totalItems);
+        System.out.println("pageSize: " + filter.pageSize());
+        System.out.println("totalPages: " + totalPages);
+
         if (totalItems == 0) {
             return new GetMovieTableResult(new ArrayList<>(), filter.page(), filter.pageSize(), totalItems, totalPages);
         }
@@ -92,6 +97,7 @@ public class MovieService {
                 .join(mc).on(m.eidrCode.eq(mc.id.movieEidr))
                 .join(c).on(mc.id.categoryId.eq(c.id))
                 .where(condition)
+                .groupBy(m.eidrCode, m.name, m.rating, m.year, m.status)
                 .offset(offset)
                 .orderBy(orderSpecifier)
                 .limit(filter.pageSize())
