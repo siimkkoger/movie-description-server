@@ -7,7 +7,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 
+
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping(value = "api/movie")
 public class MovieController {
@@ -18,6 +21,12 @@ public class MovieController {
 
     public MovieController(MovieService movieService) {
         this.movieService = movieService;
+    }
+
+    @GetMapping(value = "/get-categories")
+    public List<CategoryResponse> getCategories() {
+        logger.info("Getting all categories");
+        return movieService.getCategories();
     }
 
     @PostMapping(value = "/get-movies-table")

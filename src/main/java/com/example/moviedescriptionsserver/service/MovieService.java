@@ -255,4 +255,10 @@ public class MovieService {
                 categoryEntity.getName()
         );
     }
+
+    public List<CategoryResponse> getCategories() {
+        return categoryRepository.findAll().stream()
+                .map(categoryEntity -> new CategoryResponse(categoryEntity.getId(), categoryEntity.getName()))
+                .toList();
+    }
 }
