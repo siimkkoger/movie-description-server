@@ -5,7 +5,7 @@ import lombok.Setter;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "movie", schema = "public")
+@Table(name = "movies", schema = "public")
 @Getter
 @Setter
 public class MovieEntity {
@@ -18,7 +18,7 @@ public class MovieEntity {
     private String name;
 
     @Column(name = "rating", nullable = false)
-    private Double rating;
+    private Integer rating;
 
     @Column(name = "year", nullable = false)
     private Integer year;

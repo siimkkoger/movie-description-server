@@ -95,13 +95,13 @@ public class MovieService {
         movieEntity.setRating(updateMovieRequest.rating());
         movieEntity.setYear(updateMovieRequest.year());
         movieEntity.setStatus(updateMovieRequest.status());
-        if (!movieDtoFieldsEqualEntityFields(movieEntity, updateMovieRequest)) {
+        if (!currentMovieFieldsEqualRequestedFields(movieEntity, updateMovieRequest)) {
             movieRepository.save(movieEntity);
         }
 
         // Update categories of that movie (if needed)
         List<CategoryEntity> currentCategories = categoryRepository.findCategoriesByMovieEidrCode(updateMovieRequest.eidrCode());
-        if (!currentCategoriesEqualRequestedCategories(currentCategories, updateMovieRequest.categories())) {
+        if (!currentMovieCategoriesEqualRequestedCategories(currentCategories, updateMovieRequest.categories())) {
             // Remove everything from the bridge table and add the new ones
             movieCategoryBridgeRepository.deleteAll(movieCategoryBridgeRepository.findAllByMovieEidrCode(updateMovieRequest.eidrCode()));
             movieCategoryBridgeRepository.saveAll(
@@ -119,7 +119,8 @@ public class MovieService {
         return convertToMovieResponse(movieEntity, categoryEntities);
     }
 
-    private boolean movieDtoFieldsEqualEntityFields(MovieEntity movieEntity, UpdateMovieRequest updateMovieRequest) {
+    // So that there wouldn't be unnecessary updates
+    private boolean currentMovieFieldsEqualRequestedFields(MovieEntity movieEntity, UpdateMovieRequest updateMovieRequest) {
         return movieEntity.getEidrCode().equals(updateMovieRequest.eidrCode()) &&
                 movieEntity.getName().equals(updateMovieRequest.name()) &&
                 movieEntity.getRating().equals(updateMovieRequest.rating()) &&
@@ -127,7 +128,8 @@ public class MovieService {
                 movieEntity.getStatus().equals(updateMovieRequest.status());
     }
 
-    private boolean currentCategoriesEqualRequestedCategories(List<CategoryEntity> currentCategories, List<Long> requestedCategories) {
+    // So that there wouldn't be unnecessary updates
+    private boolean currentMovieCategoriesEqualRequestedCategories(List<CategoryEntity> currentCategories, List<Long> requestedCategories) {
         return currentCategories.stream().map(CategoryEntity::getId).toList().equals(requestedCategories);
     }
 

@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "category", schema = "public")
+@Table(name = "categories", schema = "public")
 @Getter
 @Setter
 public class CategoryEntity {
