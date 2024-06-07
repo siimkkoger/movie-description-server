@@ -31,13 +31,13 @@ http://localhost:8080/swagger-ui.html
 
 ## Technology Stack
 
-- **Java**: Programming language used for development.
-- **Spring Boot**: Framework for building the application.
-- **Spring Data JPA**: For data persistence and repository management.
-- **QueryDSL**: For type-safe queries.
-- **JUnit**: Testing framework.
-- **Mockito**: Mocking framework for unit tests.
-- **Gradle**: Build automation tool.
+- **Java**
+- **Spring Boot**
+- **Spring Data JPA** (For data persistence and repository management)
+- **QueryDSL** (For type-safe queries)
+- **JUnit** (Testing framework for unit tests)
+- **Mockito** (Mocking framework for unit tests)
+- **Gradle** (Build automation tool)
 
 ## Getting Started
 
