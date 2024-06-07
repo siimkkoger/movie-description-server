@@ -50,6 +50,30 @@ The **Movie Descriptions Server** is a Spring Boot application that provides a R
 3. **Run the application:t**:
    ```sh
    ./gradlew bootRun
+   
+### Data
+The project uses Postgresql as the database. 
+The database configuration can be found in the `application.properties` file.
+- You want to create a postgresql database
+- You want to update the `application.properties` file with the correct database url, username, and password.
+  ```sh
+  spring.application.name=movie-descriptions-server
+  spring.datasource.url=jdbc:postgresql://localhost:5432/snowhound
+  spring.datasource.username=devuser
+  spring.datasource.password=devpass
+  spring.datasource.driver-class-name=org.postgresql.Driver
+  ```
+- You want to run the migration script to create the database schema and populate the database with some sample data.
+- You can find the sql script in the `src/main/resources/db/migration` folder.
+- Database migration for e2e tests is done automatically
+  ```sh
+  ...
+  @Sql(scripts = {"/migration/setup-test-schema.sql"}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
+  @Sql(scripts = {"/migration/teardown-test-schema.sql"}, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+  public class MovieE2eTest {
+  ...
+  }
+  ```
 
 ### API Endpoints
 
