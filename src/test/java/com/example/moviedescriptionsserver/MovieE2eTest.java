@@ -1,12 +1,18 @@
 package com.example.moviedescriptionsserver;
 
-import com.example.moviedescriptionsserver.dto.*;
+import com.example.moviedescriptionsserver.dto.request.CreateMovieRequest;
+import com.example.moviedescriptionsserver.dto.request.DeleteMoviesRequest;
+import com.example.moviedescriptionsserver.dto.request.GetMoviesFilter;
+import com.example.moviedescriptionsserver.dto.request.UpdateMovieRequest;
+import com.example.moviedescriptionsserver.dto.response.GetMovieResponse;
+import com.example.moviedescriptionsserver.dto.response.GetMovieTableResult;
 import com.example.moviedescriptionsserver.entity.MovieCategoryEntityId;
 import com.example.moviedescriptionsserver.repository.CategoryRepository;
 import com.example.moviedescriptionsserver.repository.MovieCategoryBridgeRepository;
 import com.example.moviedescriptionsserver.repository.MovieRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.querydsl.core.types.Order;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +23,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.util.ArrayList;
@@ -52,14 +59,13 @@ public class MovieE2eTest {
 
     private final String controllerPath = "/api/movie";
 
-    @Test
-    void test() {
+    @BeforeEach
+    void setup() {
         assertThat(applicationName).isEqualTo("movie-descriptions-server-test");
     }
 
     @Test
     void testCreateMovie() throws Exception {
-        // Given
         var createMovieRequest = new CreateMovieRequest(
                 "eidrCode_test",
                 "name",
@@ -69,16 +75,10 @@ public class MovieE2eTest {
                 List.of(1L)
         );
 
-        // When
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                        .post(controllerPath + "/create-movie")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createMovieRequest))
-                        .contentType("application/json"))
+        MvcResult result = performPostRequest(controllerPath + "/create-movie", createMovieRequest)
                 .andExpect(status().isOk())
                 .andReturn();
 
-        // Then
         var response = objectMapper.readValue(result.getResponse().getContentAsString(), GetMovieResponse.class);
         assertThat(response).isNotNull();
         assertThat(response.movie().eidrCode()).isEqualTo(createMovieRequest.eidrCode());
@@ -89,47 +89,27 @@ public class MovieE2eTest {
         assertThat(response.categories()).hasSize(1);
         assertThat(response.categories().get(0).id()).isEqualTo(1L);
 
-        // Cleanup
-        var movieCategoryBridgeId = new MovieCategoryEntityId("eidrCode_test", 1L);
-        movieCategoryBridgeRepository.deleteById(movieCategoryBridgeId);
-        movieRepository.deleteById("eidrCode_test");
-        assertThat(movieRepository.findById("eidrCode_test")).isEmpty();
-        assertThat(movieCategoryBridgeRepository.findById(movieCategoryBridgeId)).isEmpty();
+        cleanupMovie(createMovieRequest.eidrCode(), 1L);
     }
 
     @Test
     void testCreateMovie_invalidInput() throws Exception {
-        // Given
-        var createMovieRequest = new CreateMovieRequest(
-                "eidrCode_test",
-                "name",
-                5.0,
-                2021,
-                MovieStatus.ACTIVE,
-                List.of()
-        );
-
         var createMovieRequestList = new ArrayList<CreateMovieRequest>();
         createMovieRequestList.add(new CreateMovieRequest(null, "name", 5.0, 2021, MovieStatus.ACTIVE, List.of(1L)));
         createMovieRequestList.add(new CreateMovieRequest("eidrCode_test", null, 5.0, 2021, MovieStatus.ACTIVE, List.of(1L)));
         createMovieRequestList.add(new CreateMovieRequest("eidrCode_test", "name", null, 2021, MovieStatus.ACTIVE, List.of(1L)));
         createMovieRequestList.add(new CreateMovieRequest("eidrCode_test", "name", 5.0, null, MovieStatus.ACTIVE, List.of(1L)));
+        createMovieRequestList.add(new CreateMovieRequest("eidrCode_test", "name", 5.0, 9999, MovieStatus.ACTIVE, List.of(1L)));
         createMovieRequestList.add(new CreateMovieRequest("eidrCode_test", "name", 5.0, 2021, null, List.of(1L)));
         createMovieRequestList.add(new CreateMovieRequest("eidrCode_test", "name", 5.0, 2021, MovieStatus.ACTIVE, List.of()));
+        createMovieRequestList.add(new CreateMovieRequest("eidrCode_test", "name", 5.0, 2021, MovieStatus.ACTIVE, null));
 
-
-        // When
         createMovieRequestList.forEach(request -> {
             try {
-                MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                                .post(controllerPath + "/create-movie")
-                                .accept(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(request))
-                                .contentType("application/json"))
+                MvcResult result = performPostRequest(controllerPath + "/create-movie", request)
                         .andExpect(status().isBadRequest())
                         .andReturn();
 
-                // Then
                 assertThat(result.getResolvedException()).isNotNull();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -149,11 +129,7 @@ public class MovieE2eTest {
                 List.of(1L)
         );
 
-        MvcResult createdResult = mockMvc.perform(MockMvcRequestBuilders
-                        .post(controllerPath + "/create-movie")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createMovieRequest))
-                        .contentType("application/json"))
+        MvcResult createdResult = performPostRequest(controllerPath + "/create-movie", createMovieRequest)
                 .andExpect(status().isOk())
                 .andReturn();
         var createdMovieResponse = objectMapper.readValue(createdResult.getResponse().getContentAsString(), GetMovieResponse.class);
@@ -169,20 +145,12 @@ public class MovieE2eTest {
         );
 
         // When
-        mockMvc.perform(MockMvcRequestBuilders
-                        .put(controllerPath + "/update-movie")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateMovieRequest))
-                        .contentType("application/json"))
+        performPutRequest(controllerPath + "/update-movie", updateMovieRequest)
                 .andExpect(status().isOk())
                 .andReturn();
 
         // Then
-        MvcResult getResultByEidr = mockMvc.perform(MockMvcRequestBuilders
-                        .post(controllerPath + "/get-movies-table")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new GetMoviesFilter(null, "eidrCode_test", null, null, null, null, null)))
-                        .contentType("application/json"))
+        MvcResult getResultByEidr = performPostRequest(controllerPath + "/get-movies-table", new GetMoviesFilter(null, createdMovieEidrCode, null, null, null, null, null))
                 .andExpect(status().isOk())
                 .andReturn();
         var response = objectMapper.readValue(getResultByEidr.getResponse().getContentAsString(), GetMovieTableResult.class);
@@ -195,11 +163,7 @@ public class MovieE2eTest {
         assertThat(movie.year()).isEqualTo(updateMovieRequest.year());
         assertThat(movie.status()).isEqualTo(updateMovieRequest.status());
 
-        MvcResult getResultByCategory = mockMvc.perform(MockMvcRequestBuilders
-                        .post(controllerPath + "/get-movies-table")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new GetMoviesFilter(List.of(2L, 4L), null, null, null, null, null, null)))
-                        .contentType("application/json"))
+        MvcResult getResultByCategory = performPostRequest(controllerPath + "/get-movies-table", new GetMoviesFilter(List.of(2L, 4L), null, null, null, null, null, null))
                 .andExpect(status().isOk())
                 .andReturn();
         response = objectMapper.readValue(getResultByCategory.getResponse().getContentAsString(), GetMovieTableResult.class);
@@ -208,12 +172,7 @@ public class MovieE2eTest {
         assertThat(response.movies().stream().anyMatch(m -> m.eidrCode().equals(updateMovieRequest.eidrCode()))).isTrue();
 
         // Cleanup
-        movieCategoryBridgeRepository.deleteById(new MovieCategoryEntityId("eidrCode_test", 2L));
-        movieCategoryBridgeRepository.deleteById(new MovieCategoryEntityId("eidrCode_test", 4L));
-        movieRepository.deleteById("eidrCode_test");
-        assertThat(movieRepository.findById("eidrCode_test")).isEmpty();
-        assertThat(movieCategoryBridgeRepository.findById(new MovieCategoryEntityId("eidrCode_test", 2L))).isEmpty();
-        assertThat(movieCategoryBridgeRepository.findById(new MovieCategoryEntityId("eidrCode_test", 4L))).isEmpty();
+        cleanupMovie(updateMovieRequest.eidrCode(), 2L, 4L);
     }
 
     @Test
@@ -227,56 +186,37 @@ public class MovieE2eTest {
                 MovieStatus.ACTIVE,
                 List.of(1L)
         );
-
-        MvcResult createdResult = mockMvc.perform(MockMvcRequestBuilders
-                        .post(controllerPath + "/create-movie")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createMovieRequest))
-                        .contentType("application/json"))
+        MvcResult createdResult = performPostRequest(controllerPath + "/create-movie", createMovieRequest)
                 .andExpect(status().isOk())
                 .andReturn();
         var createdMovieResponse = objectMapper.readValue(createdResult.getResponse().getContentAsString(), GetMovieResponse.class);
         var createdMovieEidrCode = createdMovieResponse.movie().eidrCode();
 
-            var updateMovieRequest = new UpdateMovieRequest(
-                    createdMovieEidrCode,
-                    "new name",
-                    4.0,
-                    2022,
-                    MovieStatus.INACTIVE,
-                    List.of(2L, 4L)
-            );
+        var updateMovieRequestList = new ArrayList<UpdateMovieRequest>();
+        updateMovieRequestList.add(new UpdateMovieRequest(null, "new name", 4.0, 2022, MovieStatus.INACTIVE, List.of(2L, 4L)));
+        updateMovieRequestList.add(new UpdateMovieRequest(createdMovieEidrCode, null, 4.0, 2022, MovieStatus.INACTIVE, List.of(2L, 4L)));
+        updateMovieRequestList.add(new UpdateMovieRequest(createdMovieEidrCode, "new name", null, 2022, MovieStatus.INACTIVE, List.of(2L, 4L)));
+        updateMovieRequestList.add(new UpdateMovieRequest(createdMovieEidrCode, "new name", 4.0, null, MovieStatus.INACTIVE, List.of(2L, 4L)));
+        updateMovieRequestList.add(new UpdateMovieRequest(createdMovieEidrCode, "new name", 4.0, 9999, MovieStatus.INACTIVE, List.of(2L, 4L)));
+        updateMovieRequestList.add(new UpdateMovieRequest(createdMovieEidrCode, "new name", 4.0, 2022, null, List.of(2L, 4L)));
+        updateMovieRequestList.add(new UpdateMovieRequest(createdMovieEidrCode, "new name", 4.0, 2022, MovieStatus.INACTIVE, List.of()));
+        updateMovieRequestList.add(new UpdateMovieRequest(createdMovieEidrCode, "new name", 4.0, 2022, MovieStatus.INACTIVE, null));
 
-            var updateMovieRequestList = new ArrayList<UpdateMovieRequest>();
-            updateMovieRequestList.add(new UpdateMovieRequest(null, "new name", 4.0, 2022, MovieStatus.INACTIVE, List.of(2L, 4L)));
-            updateMovieRequestList.add(new UpdateMovieRequest(createdMovieEidrCode, null, 4.0, 2022, MovieStatus.INACTIVE, List.of(2L, 4L)));
-            updateMovieRequestList.add(new UpdateMovieRequest(createdMovieEidrCode, "new name", null, 2022, MovieStatus.INACTIVE, List.of(2L, 4L)));
-            updateMovieRequestList.add(new UpdateMovieRequest(createdMovieEidrCode, "new name", 4.0, null, MovieStatus.INACTIVE, List.of(2L, 4L)));
-            updateMovieRequestList.add(new UpdateMovieRequest(createdMovieEidrCode, "new name", 4.0, 2022, null, List.of(2L, 4L)));
-            updateMovieRequestList.add(new UpdateMovieRequest(createdMovieEidrCode, "new name", 4.0, 2022, MovieStatus.INACTIVE, List.of()));
+        updateMovieRequestList.forEach(request -> {
+            try {
+                MvcResult result = performPutRequest(controllerPath + "/update-movie", request)
+                        .andExpect(status().isBadRequest())
+                        .andReturn();
 
-            // When
-            updateMovieRequestList.forEach(request -> {
-                try {
-                    MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                                    .put(controllerPath + "/update-movie")
-                                    .accept(MediaType.APPLICATION_JSON)
-                                    .content(objectMapper.writeValueAsString(request))
-                                    .contentType("application/json"))
-                            .andExpect(status().isBadRequest())
-                            .andReturn();
-
-                    // Then
-                    assertThat(result.getResolvedException()).isNotNull();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
+                assertThat(result.getResolvedException()).isNotNull();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @Test
     void testDeleteMovie() throws Exception {
-        // Given
         var createMovieRequest = new CreateMovieRequest(
                 "eidrCode_test",
                 "name",
@@ -286,65 +226,37 @@ public class MovieE2eTest {
                 List.of(2L, 4L)
         );
 
-        MvcResult createdResult = mockMvc.perform(MockMvcRequestBuilders
-                        .post(controllerPath + "/create-movie")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createMovieRequest))
-                        .contentType("application/json"))
+        // Create movie
+        MvcResult createdResult = performPostRequest(controllerPath + "/create-movie", createMovieRequest)
                 .andExpect(status().isOk())
                 .andReturn();
         var createdMovieResponse = objectMapper.readValue(createdResult.getResponse().getContentAsString(), GetMovieResponse.class);
         var createdMovieEidrCode = createdMovieResponse.movie().eidrCode();
 
-        // When
-        mockMvc.perform(MockMvcRequestBuilders
-                        .delete(controllerPath + "/delete-movies")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new DeleteMoviesRequest(List.of(createdMovieEidrCode))))
-                        .contentType("application/json"))
+        // Delete movie
+        performDeleteRequest(controllerPath + "/delete-movies", new DeleteMoviesRequest(List.of(createdMovieEidrCode)))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        // Then
-        MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
-                        .post(controllerPath + "/get-movies-table")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new GetMoviesFilter(null, createdMovieEidrCode, null, null, null, null, null)))
-                        .contentType("application/json"))
-                .andExpect(status().isOk())
-                .andReturn();
-        var response = objectMapper.readValue(getResult.getResponse().getContentAsString(), GetMovieTableResult.class);
+        // Check if movie was deleted
+        var response = getMovieTable(new GetMoviesFilter(null, createdMovieEidrCode, null, null, null, null, null));
 
         assertThat(response).isNotNull();
         assertThat(response.movies()).isEmpty();
 
-        MvcResult getResultByCategory = mockMvc.perform(MockMvcRequestBuilders
-                        .post(controllerPath + "/get-movies-table")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new GetMoviesFilter(List.of(2L, 4L), null, null, null, null, null, null)))
-                        .contentType("application/json"))
-                .andExpect(status().isOk())
-                .andReturn();
-        response = objectMapper.readValue(getResultByCategory.getResponse().getContentAsString(), GetMovieTableResult.class);
+        // Check if movie categories were deleted
+        response = getMovieTable(new GetMoviesFilter(List.of(2L, 4L), null, null, null, null, null, null));
         assertThat(response).isNotNull();
         assertThat(response.movies().stream().anyMatch(m -> m.eidrCode().equals(createdMovieEidrCode))).isFalse();
     }
 
     @Test
     void testDeleteMovie_invalidInput() throws Exception {
-        // Given
         var deleteMoviesRequest = new DeleteMoviesRequest(List.of("999999999999"));
 
-        // When
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                        .delete(controllerPath + "/delete-movies")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(deleteMoviesRequest))
-                        .contentType("application/json"))
-                .andExpect(status().isBadRequest())
-                .andReturn();
+        MvcResult result = performDeleteRequest(controllerPath + "/delete-movies", deleteMoviesRequest)
+                .andExpect(status().isBadRequest()).andReturn();
 
-        // Then
         assertThat(result.getResolvedException()).isNotNull();
     }
 
@@ -360,12 +272,7 @@ public class MovieE2eTest {
                 List.of(2L, 4L)
         );
 
-        mockMvc.perform(MockMvcRequestBuilders
-                        .post(controllerPath + "/create-movie")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createMovieRequest))
-                        .contentType("application/json"))
-                .andExpect(status().isOk());
+        performPostRequest(controllerPath + "/create-movie", createMovieRequest);
 
         // When
         MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
@@ -390,18 +297,8 @@ public class MovieE2eTest {
 
     @Test
     void testGetMovies_noInputs() throws Exception {
-        // Given
-        // When
-        MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
-                        .post(controllerPath + "/get-movies-table")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new GetMoviesFilter(null, null, null, null, null, null, null)))
-                        .contentType("application/json"))
-                .andExpect(status().isOk())
-                .andReturn();
+        var response = getMovieTable(new GetMoviesFilter(null, null, null, null, null, null, null));
 
-        // Then
-        var response = objectMapper.readValue(getResult.getResponse().getContentAsString(), GetMovieTableResult.class);
         assertThat(response).isNotNull();
         assertThat(response.movies()).hasSize(5);
         assertThat(response.page()).isEqualTo(1);
@@ -411,18 +308,8 @@ public class MovieE2eTest {
 
     @Test
     void testGetMovies_categoryFilter() throws Exception {
-        // Given
-        // When
-        MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
-                        .post(controllerPath + "/get-movies-table")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new GetMoviesFilter(List.of(1L), null, null, null, null, null, null)))
-                        .contentType("application/json"))
-                .andExpect(status().isOk())
-                .andReturn();
+        var response = getMovieTable(new GetMoviesFilter(List.of(1L), null, null, null, null, null, null));
 
-        // Then
-        var response = objectMapper.readValue(getResult.getResponse().getContentAsString(), GetMovieTableResult.class);
         assertThat(response).isNotNull();
         assertThat(response.movies()).hasSize(5);
         assertThat(response.page()).isEqualTo(1);
@@ -432,18 +319,8 @@ public class MovieE2eTest {
 
     @Test
     void testGetMovies_pagination() throws Exception {
-        // Given
-        // When
-        MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
-                        .post(controllerPath + "/get-movies-table")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new GetMoviesFilter(null, null, null, 2, 10, null, null)))
-                        .contentType("application/json"))
-                .andExpect(status().isOk())
-                .andReturn();
+        var response = getMovieTable(new GetMoviesFilter(null, null, null, 2, 10, null, null));
 
-        // Then
-        var response = objectMapper.readValue(getResult.getResponse().getContentAsString(), GetMovieTableResult.class);
         assertThat(response).isNotNull();
         assertThat(response.movies()).hasSize(10);
         assertThat(response.page()).isEqualTo(2);
@@ -453,18 +330,8 @@ public class MovieE2eTest {
 
     @Test
     void testGetMovies_orderBy_desc() throws Exception {
-        // Given
-        // When
-        MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
-                        .post(controllerPath + "/get-movies-table")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new GetMoviesFilter(null, null, null, 1, 7, MoviesOrderBy.RATING, Order.DESC)))
-                        .contentType("application/json"))
-                .andExpect(status().isOk())
-                .andReturn();
+        var response = getMovieTable(new GetMoviesFilter(null, null, null, 1, 7, MoviesOrderBy.RATING, Order.DESC));
 
-        // Then
-        var response = objectMapper.readValue(getResult.getResponse().getContentAsString(), GetMovieTableResult.class);
         assertThat(response).isNotNull();
         assertThat(response.movies()).hasSize(7);
         assertThat(response.movies().get(0).rating()).isEqualTo(9.0);
@@ -478,18 +345,8 @@ public class MovieE2eTest {
 
     @Test
     void testGetMovies_orderBy_asc() throws Exception {
-        // Given
-        // When
-        MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
-                        .post(controllerPath + "/get-movies-table")
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new GetMoviesFilter(null, null, null, 1, 7, MoviesOrderBy.RATING, Order.ASC)))
-                        .contentType("application/json"))
-                .andExpect(status().isOk())
-                .andReturn();
+        var response = getMovieTable(new GetMoviesFilter(null, null, null, 1, 7, MoviesOrderBy.RATING, Order.ASC));
 
-        // Then
-        var response = objectMapper.readValue(getResult.getResponse().getContentAsString(), GetMovieTableResult.class);
         assertThat(response).isNotNull();
         assertThat(response.movies()).hasSize(7);
         assertThat(response.movies().get(0).rating()).isEqualTo(6.0);
@@ -499,5 +356,47 @@ public class MovieE2eTest {
         assertThat(response.movies().get(4).rating()).isEqualTo(6.0);
         assertThat(response.movies().get(5).rating()).isEqualTo(6.0);
         assertThat(response.movies().get(6).rating()).isEqualTo(7.0);
+    }
+
+    // Helper methods
+
+    private GetMovieTableResult getMovieTable(GetMoviesFilter filter) throws Exception {
+        MvcResult getResult = performPostRequest(controllerPath + "/get-movies-table", filter).andExpect(status().isOk()).andReturn();
+        return objectMapper.readValue(getResult.getResponse().getContentAsString(), GetMovieTableResult.class);
+    }
+
+    private ResultActions performPostRequest(String url, Object request) throws Exception {
+        return mockMvc.perform(MockMvcRequestBuilders
+                .post(url)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .contentType("application/json"));
+    }
+
+    private ResultActions performPutRequest(String url, Object request) throws Exception {
+        return mockMvc.perform(MockMvcRequestBuilders
+                .put(url)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .contentType("application/json"));
+    }
+
+    private ResultActions performDeleteRequest(String url, Object request) throws Exception {
+        return mockMvc.perform(MockMvcRequestBuilders
+                .delete(url)
+                .accept(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .contentType("application/json"));
+    }
+
+    private void cleanupMovie(String eidrCode, Long... categoryIds) {
+        for (Long categoryId : categoryIds) {
+            movieCategoryBridgeRepository.deleteById(new MovieCategoryEntityId(eidrCode, categoryId));
+        }
+        movieRepository.deleteById(eidrCode);
+        assertThat(movieRepository.findById(eidrCode)).isEmpty();
+        for (Long categoryId : categoryIds) {
+            assertThat(movieCategoryBridgeRepository.findById(new MovieCategoryEntityId(eidrCode, categoryId))).isEmpty();
+        }
     }
 }

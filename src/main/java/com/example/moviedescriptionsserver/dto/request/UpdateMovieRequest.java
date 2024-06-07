@@ -1,4 +1,4 @@
-package com.example.moviedescriptionsserver.dto;
+package com.example.moviedescriptionsserver.dto.request;
 
 import com.example.moviedescriptionsserver.MovieStatus;
 import jakarta.validation.constraints.NotEmpty;

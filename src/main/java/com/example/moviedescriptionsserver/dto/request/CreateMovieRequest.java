@@ -1,14 +1,17 @@
-package com.example.moviedescriptionsserver.dto;
+package com.example.moviedescriptionsserver.dto.request;
 
 import com.example.moviedescriptionsserver.MovieStatus;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
-public record MovieTableRow(
+import java.util.List;
+
+public record CreateMovieRequest(
         @NotNull String eidrCode,
         @NotNull String name,
         @NotNull Double rating,
         @NotNull Integer year,
         @NotNull MovieStatus status,
-        @NotNull String categories
+        @NotNull @NotEmpty List<Long> categories
 ) {
 }

@@ -1,6 +1,12 @@
 package com.example.moviedescriptionsserver.controller;
 
-import com.example.moviedescriptionsserver.dto.*;
+import com.example.moviedescriptionsserver.dto.request.CreateMovieRequest;
+import com.example.moviedescriptionsserver.dto.request.DeleteMoviesRequest;
+import com.example.moviedescriptionsserver.dto.request.GetMoviesFilter;
+import com.example.moviedescriptionsserver.dto.request.UpdateMovieRequest;
+import com.example.moviedescriptionsserver.dto.response.CategoryResponse;
+import com.example.moviedescriptionsserver.dto.response.GetMovieResponse;
+import com.example.moviedescriptionsserver.dto.response.GetMovieTableResult;
 import com.example.moviedescriptionsserver.service.MovieService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;

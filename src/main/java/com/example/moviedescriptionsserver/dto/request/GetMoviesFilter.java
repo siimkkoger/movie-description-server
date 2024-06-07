@@ -1,4 +1,4 @@
-package com.example.moviedescriptionsserver.dto;
+package com.example.moviedescriptionsserver.dto.request;
 
 import com.example.moviedescriptionsserver.MoviesOrderBy;
 import com.querydsl.core.types.Order;
@@ -13,7 +13,7 @@ public record GetMoviesFilter(
         String eidrCode,
         String name,
         @NotNull @Min(1) Integer page,   // Page number (1-based)
-        @NotNull @Positive Integer pageSize,   // Number of items per page
+        @NotNull @Positive Integer pageSize,
         @NotNull MoviesOrderBy orderBy,
         @NotNull Order direction
 ) {

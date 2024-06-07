@@ -1,9 +1,9 @@
 package com.example.moviedescriptionsserver;
 
 import com.example.moviedescriptionsserver.controller.MovieController;
-import com.example.moviedescriptionsserver.dto.CategoryResponse;
-import com.example.moviedescriptionsserver.dto.CreateMovieRequest;
-import com.example.moviedescriptionsserver.dto.GetMovieResponse;
+import com.example.moviedescriptionsserver.dto.response.CategoryResponse;
+import com.example.moviedescriptionsserver.dto.request.CreateMovieRequest;
+import com.example.moviedescriptionsserver.dto.response.GetMovieResponse;
 import com.example.moviedescriptionsserver.dto.MovieDto;
 import com.example.moviedescriptionsserver.service.MovieService;
 import com.fasterxml.jackson.databind.ObjectMapper;

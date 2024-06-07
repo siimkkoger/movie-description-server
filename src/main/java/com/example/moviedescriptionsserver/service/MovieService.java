@@ -1,7 +1,12 @@
 package com.example.moviedescriptionsserver.service;
 
 import com.example.moviedescriptionsserver.MoviesOrderBy;
-import com.example.moviedescriptionsserver.dto.*;
+import com.example.moviedescriptionsserver.dto.MovieDto;
+import com.example.moviedescriptionsserver.dto.MovieTableRowDto;
+import com.example.moviedescriptionsserver.dto.request.CreateMovieRequest;
+import com.example.moviedescriptionsserver.dto.request.GetMoviesFilter;
+import com.example.moviedescriptionsserver.dto.request.UpdateMovieRequest;
+import com.example.moviedescriptionsserver.dto.response.*;
 import com.example.moviedescriptionsserver.entity.*;
 import com.example.moviedescriptionsserver.repository.CategoryRepository;
 import com.example.moviedescriptionsserver.repository.MovieCategoryBridgeRepository;
@@ -58,14 +63,15 @@ public class MovieService {
     }
 
     /**
-     * Get all movies with the given filters
+     * Get all movies with the given filters using QueryDSL
      *
+     * Note:
      * Uses the string aggregation template for categories using PostgreSQL's string_agg
-     * In real life situation I'd possibly use a more generic approach for this.
+     * In real life situation I'd possibly use a more generic approach for this as this is PostgreSQL specific.
      * Maybe have a separate query through separate API for categories and then join them with the movies
-     * in the frontend. This would be more flexible, faster (could do async), and easier to maintain.
-     * Also, seeing all categories in the table might not be necessary, but it's good for testing.
-     * As it wasn't a requirement anyways then I took some liberties with it.
+     * in the frontend. This would be more flexible (separation of concerms), faster (could do async), and easier to maintain.
+     * Also, seeing all the categories in the table might not be necessary anyways, but it's good for testing.
+     * Anyways... as it wasn't a requirement then I took some liberties with it.
      *
      * @param filter
      * @return
@@ -108,7 +114,7 @@ public class MovieService {
         StringTemplate categoryConcat = Expressions.stringTemplate("string_agg({0}, ', ')", c.name);
 
         var movieList = queryFactory
-                .select(Projections.constructor(MovieTableRow.class,
+                .select(Projections.constructor(MovieTableRowDto.class,
                         m.eidrCode,
                         m.name,
                         m.rating,

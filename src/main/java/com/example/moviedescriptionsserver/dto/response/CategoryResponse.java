@@ -1,4 +1,4 @@
-package com.example.moviedescriptionsserver.dto;
+package com.example.moviedescriptionsserver.dto.response;
 
 import jakarta.validation.constraints.NotNull;
 

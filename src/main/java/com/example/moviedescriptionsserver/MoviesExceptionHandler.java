@@ -9,6 +9,14 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 
+/**
+ * This class is responsible for handling exceptions thrown by the application.
+ *
+ * Note:
+ * In real life I'd have a custom class to encompass the exception message and status code more specific
+ * to our needs, but for this exercise I'm just returning the base exception message as
+ * it wasn't required to have a more detailed response (and the homework was pretty darn long anyways xdd).
+ */
 @ControllerAdvice
 public class MoviesExceptionHandler {
 

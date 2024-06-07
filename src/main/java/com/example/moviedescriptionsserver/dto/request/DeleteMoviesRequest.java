@@ -1,4 +1,4 @@
-package com.example.moviedescriptionsserver.dto;
+package com.example.moviedescriptionsserver.dto.request;
 
 import java.util.List;
 
