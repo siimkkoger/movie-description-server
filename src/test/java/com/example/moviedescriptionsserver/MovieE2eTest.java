@@ -349,6 +349,46 @@ public class MovieE2eTest {
     }
 
     @Test
+    void testGetMovie() throws Exception {
+        // Given
+        var createMovieRequest = new CreateMovieRequest(
+                "eidrCode_test_single",
+                "Movie single",
+                5.0,
+                2021,
+                MovieStatus.ACTIVE,
+                List.of(2L, 4L)
+        );
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .post(controllerPath + "/create-movie")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createMovieRequest))
+                        .contentType("application/json"))
+                .andExpect(status().isOk());
+
+        // When
+        MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
+                        .get(controllerPath + "/get-movie")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .param("eidrCode", "eidrCode_test_single"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Then
+        var response = objectMapper.readValue(getResult.getResponse().getContentAsString(), GetMovieResponse.class);
+        assertThat(response).isNotNull();
+        assertThat(response.movie().eidrCode()).isEqualTo("eidrCode_test_single");
+        assertThat(response.movie().name()).isEqualTo("Movie single");
+        assertThat(response.movie().rating()).isEqualTo(5.0);
+        assertThat(response.movie().year()).isEqualTo(2021);
+        assertThat(response.movie().status()).isEqualTo(MovieStatus.ACTIVE);
+        assertThat(response.categories()).hasSize(2);
+        assertThat(response.categories().get(0).id()).isEqualTo(2L);
+        assertThat(response.categories().get(1).id()).isEqualTo(4L);
+    }
+
+    @Test
     void testGetMovies_noInputs() throws Exception {
         // Given
         // When

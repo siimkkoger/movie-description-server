@@ -45,6 +45,16 @@ public class MovieService {
         this.queryFactory = queryFactory;
     }
 
+    public GetMovieResponse getMovie(String eidrCode) {
+        MovieEntity movieEntity = movieRepository.findByEidrCode(eidrCode);
+        if (movieEntity == null) {
+            throw new IllegalArgumentException("Movie with eidrCode " + eidrCode + " does not exist.");
+        }
+
+        List<CategoryEntity> categoryEntities = categoryRepository.findCategoriesByMovieEidrCode(eidrCode);
+        return convertToMovieResponse(movieEntity, categoryEntities);
+    }
+
     public GetMovieTableResult getAllMovies(GetMoviesFilter filter) {
         var m = QMovieEntity.movieEntity;
         var c = QCategoryEntity.categoryEntity;

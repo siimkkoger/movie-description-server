@@ -23,6 +23,12 @@ public class MovieController {
         this.movieService = movieService;
     }
 
+    @GetMapping(value = "/get-movie")
+    public GetMovieResponse getMovie(@RequestParam String eidrCode) {
+        logger.info("Getting movie with eidrCode: {}", eidrCode);
+        return movieService.getMovie(eidrCode);
+    }
+
     @GetMapping(value = "/get-categories")
     public List<CategoryResponse> getCategories() {
         logger.info("Getting all categories");
