@@ -297,7 +297,7 @@ public class MovieE2eTest {
         var deleteMoviesRequest = new DeleteMoviesRequest(List.of("non_existent_eidr_code"));
 
         MvcResult result = performDeleteRequest(controllerPath + "/delete-movies", deleteMoviesRequest)
-                .andExpect(status().isNotFound())
+                .andExpect(status().isBadRequest())
                 .andReturn();
 
         assertThat(result.getResolvedException()).isNotNull();

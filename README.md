@@ -11,6 +11,8 @@ The **Movie Descriptions Server** is a Spring Boot application that provides a R
 - [Features](#features)
 - [Technology Stack](#technology-stack)
 - [Getting Started](#getting-started)
+- [Data](#data)
+- [Future Improvements](#future-improvements)
 
 
 ## API Endpoints
@@ -59,7 +61,7 @@ http://localhost:8080/swagger-ui.html
    ```sh
    ./gradlew bootRun
    
-### Data
+## Data
 The project uses Postgresql as the database. 
 The database configuration can be found in the `application.properties` file.
 - You want to create a postgresql database
@@ -82,4 +84,8 @@ The database configuration can be found in the `application.properties` file.
   ...
   }
   ```
+  
+## Future Improvements
+- Custom exception handling
+- Separate categories and movies more (for example during movie updating different endpoints for main movie info and categories)
 
