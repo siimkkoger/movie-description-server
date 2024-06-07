@@ -53,6 +53,9 @@ dependencies {
 
     testAnnotationProcessor(group = "org.projectlombok", name = "lombok", version = lombokVersion)
     testAnnotationProcessor(group = "com.querydsl", name = "querydsl-apt", version = queryDslVersion, classifier = "jakarta")
+
+    // OpenAPI (Swagger)
+    implementation(group = "org.springdoc", name = "springdoc-openapi-starter-webmvc-ui", version = "2.0.2")
 }
 
 tasks.withType<Test> {
