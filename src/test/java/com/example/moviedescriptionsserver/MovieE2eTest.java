@@ -7,7 +7,6 @@ import com.example.moviedescriptionsserver.dto.request.UpdateMovieRequest;
 import com.example.moviedescriptionsserver.dto.response.GetMovieResponse;
 import com.example.moviedescriptionsserver.dto.response.GetMovieTableResult;
 import com.example.moviedescriptionsserver.entity.MovieCategoryEntityId;
-import com.example.moviedescriptionsserver.repository.CategoryRepository;
 import com.example.moviedescriptionsserver.repository.MovieCategoryBridgeRepository;
 import com.example.moviedescriptionsserver.repository.MovieRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,9 +52,6 @@ public class MovieE2eTest {
 
     @Autowired
     private MovieRepository movieRepository;
-
-    @Autowired
-    private CategoryRepository categoryRepository;
 
     private final String controllerPath = "/api/movie";
 
@@ -118,6 +114,33 @@ public class MovieE2eTest {
     }
 
     @Test
+    void testCreateMovie_duplicateEidrCode() throws Exception {
+        var createMovieRequest = new CreateMovieRequest(
+                "eidrCode_test_duplicate",
+                "name",
+                5.0,
+                2021,
+                MovieStatus.ACTIVE,
+                List.of(1L)
+        );
+
+        // Create the first movie
+        performPostRequest(controllerPath + "/create-movie", createMovieRequest)
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Try to create a second movie with the same EIDR code
+        MvcResult result = performPostRequest(controllerPath + "/create-movie", createMovieRequest)
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertThat(result.getResolvedException()).isNotNull();
+
+        // Cleanup
+        cleanupMovie(createMovieRequest.eidrCode(), 1L);
+    }
+
+    @Test
     void testUpdateMovie() throws Exception {
         // Given
         var createMovieRequest = new CreateMovieRequest(
@@ -174,6 +197,25 @@ public class MovieE2eTest {
         // Cleanup
         cleanupMovie(updateMovieRequest.eidrCode(), 2L, 4L);
     }
+
+    @Test
+    void testUpdateMovie_nonExistent() throws Exception {
+        var updateMovieRequest = new UpdateMovieRequest(
+                "non_existent_eidr_code",
+                "new name",
+                4.0,
+                2022,
+                MovieStatus.INACTIVE,
+                List.of(2L, 4L)
+        );
+
+        MvcResult result = performPutRequest(controllerPath + "/update-movie", updateMovieRequest)
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertThat(result.getResolvedException()).isNotNull();
+    }
+
 
     @Test
     void testUpdateMovie_invalidInput() throws Exception {
@@ -251,6 +293,18 @@ public class MovieE2eTest {
     }
 
     @Test
+    void testDeleteMovie_nonExistent() throws Exception {
+        var deleteMoviesRequest = new DeleteMoviesRequest(List.of("non_existent_eidr_code"));
+
+        MvcResult result = performDeleteRequest(controllerPath + "/delete-movies", deleteMoviesRequest)
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        assertThat(result.getResolvedException()).isNotNull();
+    }
+
+
+    @Test
     void testDeleteMovie_invalidInput() throws Exception {
         var deleteMoviesRequest = new DeleteMoviesRequest(List.of("999999999999"));
 
@@ -293,6 +347,51 @@ public class MovieE2eTest {
         assertThat(response.categories()).hasSize(2);
         assertThat(response.categories().get(0).id()).isEqualTo(2L);
         assertThat(response.categories().get(1).id()).isEqualTo(4L);
+    }
+
+    @Test
+    void testCreateAndFetchMovieWithMultipleCategories() throws Exception {
+        var createMovieRequest = new CreateMovieRequest(
+                "eidrCode_test_multi_category",
+                "Multi Category Movie",
+                7.0,
+                2021,
+                MovieStatus.ACTIVE,
+                List.of(1L, 2L)
+        );
+
+        // Create the movie
+        performPostRequest(controllerPath + "/create-movie", createMovieRequest)
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Fetch the movie
+        MvcResult getResult = mockMvc.perform(MockMvcRequestBuilders
+                        .get(controllerPath + "/get-movie")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .param("eidrCode", "eidrCode_test_multi_category"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        var response = objectMapper.readValue(getResult.getResponse().getContentAsString(), GetMovieResponse.class);
+        assertThat(response).isNotNull();
+        assertThat(response.movie().eidrCode()).isEqualTo("eidrCode_test_multi_category");
+        assertThat(response.categories()).hasSize(2);
+
+        // Cleanup
+        cleanupMovie("eidrCode_test_multi_category", 1L, 2L);
+    }
+
+    @Test
+    void testGetMovie_invalidEidrCode() throws Exception {
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                        .get(controllerPath + "/get-movie")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .param("eidrCode", "invalid_eidr_code"))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertThat(result.getResolvedException()).isNotNull();
     }
 
     @Test
@@ -357,6 +456,66 @@ public class MovieE2eTest {
         assertThat(response.movies().get(5).rating()).isEqualTo(6.0);
         assertThat(response.movies().get(6).rating()).isEqualTo(7.0);
     }
+
+    @Test
+    void testGetMovies_nameFilter() throws Exception {
+        var createMovieRequest1 = new CreateMovieRequest(
+                "eidrCode_test_name1",
+                "Test Movie 1",
+                5.0,
+                2021,
+                MovieStatus.ACTIVE,
+                List.of(1L)
+        );
+
+        var createMovieRequest2 = new CreateMovieRequest(
+                "eidrCode_test_name2",
+                "Another Test Movie",
+                6.0,
+                2022,
+                MovieStatus.ACTIVE,
+                List.of(1L)
+        );
+
+        var createMovieRequest3 = new CreateMovieRequest(
+                "eidrCode_test_name3",
+                "This is a Test Movi3",
+                7.0,
+                2023,
+                MovieStatus.ACTIVE,
+                List.of(1L)
+        );
+
+        // Create three movies
+        performPostRequest(controllerPath + "/create-movie", createMovieRequest1).andExpect(status().isOk());
+        performPostRequest(controllerPath + "/create-movie", createMovieRequest2).andExpect(status().isOk());
+        performPostRequest(controllerPath + "/create-movie", createMovieRequest3).andExpect(status().isOk());
+
+        // Fetch movies by name filter, case-insensitive and partial match
+        GetMovieTableResult response = getMovieTable(new GetMoviesFilter(null, null, "test movie", null, null, null, null));
+
+        assertThat(response).isNotNull();
+        assertThat(response.movies()).hasSize(2);
+        assertThat(response.movies().stream().anyMatch(m -> m.name().equals("Test Movie 1"))).isTrue();
+        assertThat(response.movies().stream().anyMatch(m -> m.name().equals("Another Test Movie"))).isTrue();
+
+        // Cleanup
+        cleanupMovie("eidrCode_test_name1", 1L);
+        cleanupMovie("eidrCode_test_name2", 1L);
+        cleanupMovie("eidrCode_test_name3", 1L);
+    }
+
+    @Test
+    void testGetMovies_paginationBeyondLastPage() throws Exception {
+        var response = getMovieTable(new GetMoviesFilter(null, null, null, 10, 10, null, null));
+
+        assertThat(response).isNotNull();
+        assertThat(response.movies()).isEmpty();
+        assertThat(response.page()).isEqualTo(10);
+        assertThat(response.totalPages()).isGreaterThanOrEqualTo(1);
+        assertThat(response.totalItems()).isGreaterThanOrEqualTo(25);
+    }
+
 
     // Helper methods
 

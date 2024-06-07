@@ -179,13 +179,13 @@ public class MovieService {
         validateCreateOrUpdateMovieRequest(updateMovieRequest.year(), updateMovieRequest.categories());
 
         // Update movie (if needed)
+        if (!currentMovieFieldsEqualRequestedFields(movieEntity, updateMovieRequest)) {
+            movieRepository.save(movieEntity);
+        }
         movieEntity.setName(updateMovieRequest.name());
         movieEntity.setRating(updateMovieRequest.rating());
         movieEntity.setYear(updateMovieRequest.year());
         movieEntity.setStatus(updateMovieRequest.status());
-        if (!currentMovieFieldsEqualRequestedFields(movieEntity, updateMovieRequest)) {
-            movieRepository.save(movieEntity);
-        }
 
         List<CategoryEntity> categoriesRequested = categoryRepository.findCategoriesByIds(updateMovieRequest.categories());
         // Update categories (if needed)

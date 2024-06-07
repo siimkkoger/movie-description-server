@@ -40,6 +40,7 @@ dependencies {
 
     // Test
     testImplementation(group = "org.springframework.boot", name = "spring-boot-starter-test", version = "3.1.0")
+    testImplementation("junit:junit:4.13.2")
 
     // Lombok
     compileOnly(group = "org.projectlombok", name = "lombok", version = lombokVersion)

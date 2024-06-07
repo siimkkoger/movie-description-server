@@ -11,7 +11,7 @@ import org.springframework.web.context.request.WebRequest;
 
 /**
  * This class is responsible for handling exceptions thrown by the application.
- *
+ * <p>
  * Note:
  * In real life I'd have a custom class to encompass the exception message and status code more specific
  * to our needs, but for this exercise I'm just returning the base exception message as
