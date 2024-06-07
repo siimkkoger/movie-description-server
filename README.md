@@ -13,7 +13,7 @@ The **Movie Descriptions Server** is a Spring Boot application that provides a R
 - [Getting Started](#getting-started)
 
 
-### API Endpoints
+## API Endpoints
 Run your server and then you can find the swagger documentation at the following url:
 
 http://localhost:8080/swagger-ui.html 
