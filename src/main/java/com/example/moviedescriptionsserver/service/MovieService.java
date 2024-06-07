@@ -175,7 +175,12 @@ public class MovieService {
         if (movieEntity == null) {
             throw new IllegalArgumentException("Movie with eidrCode " + updateMovieRequest.eidrCode() + " does not exist.");
         }
-
+        if (updateMovieRequest.year() > Year.now().getValue()) {
+            throw new IllegalArgumentException("Year cannot be in the future.");
+        }
+        if (updateMovieRequest.categories() == null || updateMovieRequest.categories().isEmpty()) {
+            throw new IllegalArgumentException("Movie has to have at least one category.");
+        }
         List<CategoryEntity> categoryEntities = categoryRepository.findCategoriesByIds(updateMovieRequest.categories());
         if (categoryEntities.size() != updateMovieRequest.categories().size()) {
             throw new IllegalArgumentException("Some categories do not exist.");
