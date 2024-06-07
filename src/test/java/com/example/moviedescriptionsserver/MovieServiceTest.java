@@ -1,6 +1,5 @@
 package com.example.moviedescriptionsserver;
 
-import com.example.moviedescriptionsserver.dto.MovieTableRowDto;
 import com.example.moviedescriptionsserver.dto.request.CreateMovieRequest;
 import com.example.moviedescriptionsserver.dto.request.UpdateMovieRequest;
 import com.example.moviedescriptionsserver.dto.response.GetMovieResponse;
@@ -9,18 +8,13 @@ import com.example.moviedescriptionsserver.repository.CategoryRepository;
 import com.example.moviedescriptionsserver.repository.MovieCategoryBridgeRepository;
 import com.example.moviedescriptionsserver.repository.MovieRepository;
 import com.example.moviedescriptionsserver.service.MovieService;
-import com.querydsl.jpa.impl.JPAQuery;
-import com.querydsl.jpa.impl.JPAQueryFactory;
-import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.List;
 
