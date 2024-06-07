@@ -33,6 +33,7 @@ dependencies {
     implementation(group = "com.querydsl", name = "querydsl-core", version = queryDslVersion)
     implementation(group = "com.querydsl", name = "querydsl-jpa", version = queryDslVersion, classifier = "jakarta")
     implementation(group = "com.querydsl", name = "querydsl-apt", version = queryDslVersion, classifier = "jakarta")
+    implementation(group = "com.querydsl", name = "querydsl-sql", version = queryDslVersion)
 
     // Postgresql
     runtimeOnly(group = "org.postgresql", name = "postgresql", version = "42.5.4")

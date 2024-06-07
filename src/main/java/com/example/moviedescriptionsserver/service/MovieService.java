@@ -1,18 +1,26 @@
 package com.example.moviedescriptionsserver.service;
 
 import com.example.moviedescriptionsserver.MoviesOrderBy;
-import com.example.moviedescriptionsserver.controller.MovieController;
 import com.example.moviedescriptionsserver.dto.*;
 import com.example.moviedescriptionsserver.entity.*;
 import com.example.moviedescriptionsserver.repository.CategoryRepository;
 import com.example.moviedescriptionsserver.repository.MovieCategoryBridgeRepository;
 import com.example.moviedescriptionsserver.repository.MovieRepository;
+import com.querydsl.core.types.Expression;
+import com.querydsl.core.types.dsl.StringExpression;
+import com.querydsl.core.types.dsl.StringTemplate;
+import com.querydsl.jpa.sql.JPASQLQuery;
+import com.querydsl.sql.SQLExpressions;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.querydsl.sql.SQLOps;
+import com.querydsl.sql.SQLTemplates;
+import jakarta.persistence.EntityManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -30,19 +38,22 @@ public class MovieService {
 
     private final JPAQueryFactory queryFactory;
 
+    private final EntityManager entityManager;
     private final MovieRepository movieRepository;
     private final CategoryRepository categoryRepository;
     private final MovieCategoryBridgeRepository movieCategoryBridgeRepository;
 
     public MovieService(
+            EntityManager entityManager,
             MovieRepository movieRepository,
             CategoryRepository categoryRepository,
-            MovieCategoryBridgeRepository movieCategoryBridgeRepository,
-            JPAQueryFactory queryFactory) {
+            MovieCategoryBridgeRepository movieCategoryBridgeRepository
+    ) {
+        this.entityManager = entityManager;
         this.movieRepository = movieRepository;
         this.categoryRepository = categoryRepository;
         this.movieCategoryBridgeRepository = movieCategoryBridgeRepository;
-        this.queryFactory = queryFactory;
+        this.queryFactory = new JPAQueryFactory(entityManager);
     }
 
     public GetMovieResponse getMovie(String eidrCode) {
@@ -81,12 +92,9 @@ public class MovieService {
                 .join(mc).on(m.eidrCode.eq(mc.id.movieEidr))
                 .join(c).on(mc.id.categoryId.eq(c.id))
                 .where(condition)
-                .groupBy(m.eidrCode, m.name, m.rating, m.year, m.status)
+                .groupBy(m.eidrCode)
                 .fetchCount();
         int totalPages = (int) Math.ceil((double) totalItems / filter.pageSize());
-        System.out.println("totalItems: " + totalItems);
-        System.out.println("pageSize: " + filter.pageSize());
-        System.out.println("totalPages: " + totalPages);
 
         if (totalItems == 0) {
             return new GetMovieTableResult(new ArrayList<>(), filter.page(), filter.pageSize(), totalItems, totalPages);
@@ -94,22 +102,25 @@ public class MovieService {
         var offset = (filter.page() - 1) * filter.pageSize();
         var orderSpecifier = orderSpecifier(filter.orderBy(), filter.direction());
 
-        // Fetch the movies
+        // Define the string aggregation template for categories using PostgreSQL's string_agg
+        StringTemplate categoryConcat = Expressions.stringTemplate("string_agg({0}, ', ')", c.name);
+
         var movieList = queryFactory
-                .select(Projections.constructor(MovieDto.class,
+                .select(Projections.constructor(MovieTableRow.class,
                         m.eidrCode,
                         m.name,
                         m.rating,
                         m.year,
-                        m.status
+                        m.status,
+                        categoryConcat.as("categories")
                 ))
                 .from(m)
                 .join(mc).on(m.eidrCode.eq(mc.id.movieEidr))
                 .join(c).on(mc.id.categoryId.eq(c.id))
                 .where(condition)
                 .groupBy(m.eidrCode, m.name, m.rating, m.year, m.status)
-                .offset(offset)
                 .orderBy(orderSpecifier)
+                .offset(offset)
                 .limit(filter.pageSize())
                 .fetch();
 

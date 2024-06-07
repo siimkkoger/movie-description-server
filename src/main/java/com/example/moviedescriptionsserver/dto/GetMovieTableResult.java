@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record GetMovieTableResult(
-        @NotNull List<MovieDto> movies,
+        @NotNull List<MovieTableRow> movies,
         @NotNull Integer page,
         @NotNull Integer pageSize,
         @NotNull Long totalItems,
